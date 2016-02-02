@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArnlServerForAmbiflux", "arnlServerForAmbiflux.vcproj", "{16E15970-E0B1-43D7-91A0-9037603E2F0A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Full Debug (Proprietary)|Win32 = Full Debug (Proprietary)|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16E15970-E0B1-43D7-91A0-9037603E2F0A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{16E15970-E0B1-43D7-91A0-9037603E2F0A}.Debug|Win32.Build.0 = Debug|Win32
+		{16E15970-E0B1-43D7-91A0-9037603E2F0A}.Full Debug (Proprietary)|Win32.ActiveCfg = Full Debug (Proprietary)|Win32
+		{16E15970-E0B1-43D7-91A0-9037603E2F0A}.Full Debug (Proprietary)|Win32.Build.0 = Full Debug (Proprietary)|Win32
+		{16E15970-E0B1-43D7-91A0-9037603E2F0A}.Release|Win32.ActiveCfg = Release|Win32
+		{16E15970-E0B1-43D7-91A0-9037603E2F0A}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
