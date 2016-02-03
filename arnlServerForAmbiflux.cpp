@@ -1,67 +1,22 @@
-/*
-Adept MobileRobots Advanced Robotics Navigation and Localization (ARNL)
-Version 1.7.3
-
-Copyright (C) 2004, 2005 ActivMedia Robotics LLC
-Copyright (C) 2006, 2007, 2008, 2009 MobileRobots Inc.
-Copyright (C) 2010, 2011 Adept Technology, Inc.
-
-All Rights Reserved.
-
-Adept MobileRobots does not make any representations about the
-suitability of this software for any purpose.  It is provided "as is"
-without express or implied warranty.
-
-The license for this software is distributed as LICENSE.txt in the top
-level directory.
-
-robots@mobilerobots.com
-Adept MobileRobots
-10 Columbia Drive
-Amherst, NH 03031
-800-639-9481
-
-*/
-/** @example arnlServer.cpp example of almost all ARNL features */
-
-
-
-
-
 /**
  This is an extension of Arnl server.
  Custom commands has been added.
  The robot should be able to respond to Supply, deliver, talk commands...
-
 */
 
 #include "Aria.h"
 #include "ArNetworking.h"
 #include "Arnl.h"
-#include "ArSoundsQueue.h"
-#include "ArSoundPlayer.h"
-#include "ArCepstral.h"
-#include <assert.h>
+//#include "ArSoundsQueue.h"
+//#include "ArSoundPlayer.h"
+#include "ArServerModeSupply.h"
+
 
 #include "ArLocalizationTask.h"
 #include "ArDocking.h"
-  // Create the sound queue.
-  ArSoundsQueue soundQueue;
-  ArCepstral g_Cepstral;
+#include "ArLog.h"
 
 
-void queueNowEmpty() {
-  //printf("The sound queue is now empty.\n");
-}
-
-void queueNowNonempty() {
-  //printf("The sound queue is now non-empty.\n");
-}
-
-bool no() {
-  // just a false tautology
-  return false;
-}
 
 void logOptions(const char *progname)
 {
@@ -88,19 +43,6 @@ const char* getGyroStatusString(ArRobot* robot)
   return "OK";
 }
 
-/* This function is called ArServerHandlerCommands when our custom command is
- * recieved. */
-void talkCommandHandler(ArArgumentBuilder *args)
-{
-	if(args && args->getArg(0)){
-    ArLog::log(ArLog::Normal, "Recieved custom command with argument \"%s\".", args->getArg(0));
-	soundQueue.play("c:\\temp\\ShortCircuit.wav");
-	}
-	else 
-    ArLog::log(ArLog::Normal, "Recieved custom command with no arguments.");
-}
-
-
 
 
 int main(int argc, char **argv)
@@ -110,22 +52,6 @@ int main(int argc, char **argv)
   Aria::init();
   Arnl::init();
 
- 
-
-  // Set WAV file callbacks 
-  soundQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
-  soundQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
-
-  // Notifications when the queue goes empty or non-empty.
-  soundQueue.addQueueEmptyCallback(new ArGlobalFunctor(&queueNowEmpty));
-  soundQueue.addQueueNonemptyCallback(new ArGlobalFunctor(&queueNowNonempty));
-
-  // Run the sound queue in a new thread
-  soundQueue.runAsync();
-
-  g_Cepstral.init();
-
-  
 
 
   // The robot object
@@ -498,9 +424,7 @@ int main(int argc, char **argv)
   // Add our custom command. ArServerHandlerCommands also has other methods
   // for adding commands taht take different kinds of arguments, or no
   // arguments.
-  ArGlobalFunctor1<ArArgumentBuilder*> talkCommandFunctor(&talkCommandHandler);
-  commands.addStringCommand("Talk", "Example of Talk command", &talkCommandFunctor);
-  
+
 
 
   // These provide various kinds of information to the client:
@@ -625,6 +549,9 @@ int main(int argc, char **argv)
       );
   }
 
+  
+  ArServerModeSupply modeSupply(&server, &robot);
+  //modeSupply
 
   // Setup the dock if there is a docking system on board.
   ArServerModeDock *modeDock = NULL;

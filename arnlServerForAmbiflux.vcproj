@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="C:\Program Files\MobileRobots\ARNL\bin"
+			OutputDirectory="../../bin"
 			IntermediateDirectory="../obj/$(ConfigurationName)-VC9"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -43,12 +43,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\MobileRobots\ARNL\include&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\aria&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\ArNetworking&quot;;&quot;C:\Program Files\MobileRobots\Aria\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArNetworking/include&quot;"
+				AdditionalIncludeDirectories="../../../Aria/ArSpeechSynth_Cepstral/internalLibs/include;../../../Aria/ArSpeechSynth_Cepstral/include;../../aria/ArSpeechSynth_Cepstral/internalLibs/include;../../../aria/include;../../../aria/arnetworking/include;../../include;./include;../include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;ARIADLL_EXPORTS"
 				StringPooling="false"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
 				RuntimeTypeInfo="true"
@@ -67,11 +67,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="AriaDebugVC9.lib ArNetworkingDebugVC9.lib ArnlDebugVC9.lib BaseArnlDebugVC9.lib winmm.lib ArSpeechSynth_Cepstral_DLL.lib swift.lib ws2_32.lib"
+				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib ArSpeechSynth_Cepstral_Debug_VC9.lib $(NOINHERIT)"
 				OutputFile="$(OutDir)\$(ProjectName)DebugVC9.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\MobileRobots\Aria\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internalLibs\lib&quot;;&quot;C:\Program Files\MobileRobots\ARNL\lib&quot;"
+				AdditionalLibraryDirectories="../../../Aria/bin;../../../Aria/lib;../../../Aria/ArSpeechSynth_Cepstral/internalLibs/lib;../../lib;../lib;../../bin;./lib"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
@@ -152,7 +152,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="AriaVC9.lib ArNetworkingVC9.lib ArnlVC9.lib BaseArnlVC9.lib winmm.lib ArSpeechSynth_Cepstral_DLL.lib swift.lib ws2_32.lib"
+				AdditionalDependencies="AriaVC9.lib ArNetworkingVC9.lib ArnlVC9.lib BaseArnlVC9.lib winmm.lib ArSpeechSynth_Cepstral_VC9.lib swift.lib ws2_32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)VC9.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -287,12 +287,20 @@
 				RelativePath=".\arnlServerForAmbiflux.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\ArServerModeSupply.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\Include\ArServerModeSupply.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
