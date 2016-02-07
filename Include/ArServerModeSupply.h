@@ -29,6 +29,7 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "Aria.h"
 #include "ArServerMode.h"
 #include "LecteurCarteTask.h"
+#include "SupplyTask.h"
 
 /*
 Mode in which the robot has to be supplied by an operator.
@@ -72,6 +73,7 @@ protected:
   const char * myContent;
   void supplyTask();
   LecteurCarteTask lct;
+  SupplyTask aSyncSupplyTask;
  
 };
 

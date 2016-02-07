@@ -70,8 +70,8 @@ AREXPORT void ArServerModeSupply::netSupply(ArServerClient *client,
 {
    char buf[512];
 	packet->bufToStr(buf, sizeof(buf)-1);
-	ArLog::log(ArLog::Normal, "Supply content %s", buf);
-  //myRobot->lock();
+	//ArLog::log(ArLog::Normal, "Supply content %s", buf);
+    //myRobot->lock();
    supply(buf);
 }
 
@@ -81,6 +81,7 @@ AREXPORT void ArServerModeSupply::supply(const char *content)
   myContent = content;
   myMode = "Supply";
   myStatus = "Starting supply";
+  aSyncSupplyTask.setContent(content);
   activate();
 }
 
@@ -153,7 +154,9 @@ void ArServerModeSupply::supplyTask(){
 		ArUtil::sleep(500);
 	}*/
 	printf("Supply task started with content : %s",myContent);
+	//aSyncSupplyTask
 	
+	aSyncSupplyTask.runAsync();
 	
 	//lct.invoke();
 	
