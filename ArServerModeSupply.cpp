@@ -32,13 +32,15 @@ AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server,
 					    bool defunct) : 
   ArServerMode(robot, server, "supply"),
   myStopGroup(robot),
-  myNetSupplyCB(this, &ArServerModeSupply::netSupply)
+  myNetSupplyCB(this, &ArServerModeSupply::netSupply),
+  myCardReadCB(this, &ArServerModeSupply::handleCardRead),
+  lct(&myCardReadCB)
 {
   myMode = "Supply";
   if (myServer != NULL)
   {
     addModeData("supply", "supply the robot", &myNetSupplyCB,
-		"none", "none", "Supply", "RETURN_NONE");
+		"string: content", "none", "Supply", "RETURN_NONE");
   }
 }
 
@@ -50,8 +52,9 @@ AREXPORT void ArServerModeSupply::activate(void)
 {
   if (isActive() || !baseActivate())
     return;
-  setActivityTimeToNow();
-  myStatus = "StartingSupply";
+  //setActivityTimeToNow();
+  //myStatus = "Starting supply operation";
+  supplyTask();
 }
 
 AREXPORT void ArServerModeSupply::deactivate(void)
@@ -60,20 +63,38 @@ AREXPORT void ArServerModeSupply::deactivate(void)
   baseDeactivate();
 }
 
-AREXPORT void ArServerModeSupply::supply(void)
-{
-  activate();
-}
+
 
 AREXPORT void ArServerModeSupply::netSupply(ArServerClient *client, 
 				     ArNetPacket *packet)
 {
-  setActivityTimeToNow();
-  myRobot->lock();
-  ArLog::log(ArLog::Verbose, "StoppingSupply");
-  supply();
-  myRobot->unlock();
+   char buf[512];
+	packet->bufToStr(buf, sizeof(buf)-1);
+	ArLog::log(ArLog::Normal, "Supply content %s", buf);
+  //myRobot->lock();
+   supply(buf);
 }
+
+AREXPORT void ArServerModeSupply::supply(const char *content)
+{
+  //reset();
+  myContent = content;
+  myMode = "Supply";
+  myStatus = "Starting supply";
+  activate();
+}
+
+//AREXPORT void ArServerModeGoto::serverGotoGoal(ArServerClient * /*client*/, 
+//					       ArNetPacket *packet)
+//{
+//  char buf[512];
+//  packet->bufToStr(buf, sizeof(buf)-1);
+//  ArLog::log(ArLog::Normal, "Going to goal %s", buf);
+//  //myRobot->lock();
+//  gotoGoal(buf);
+//  //myRobot->unlock();
+//}
+
 
 AREXPORT void ArServerModeSupply::userTask(void)
 {
@@ -91,7 +112,6 @@ AREXPORT void ArServerModeSupply::userTask(void)
 AREXPORT void ArServerModeSupply::addToConfig(ArConfig *config, 
 					      const char *section)
 {
- 
 }
 
 AREXPORT void ArServerModeSupply::setUseLocationDependentDevices(
@@ -123,3 +143,22 @@ AREXPORT bool ArServerModeSupply::getUseLocationDependentDevices(void)
   return myUseLocationDependentDevices;
 }
 
+//Triggered when card has been read
+void ArServerModeSupply::handleCardRead(int value){
+  printf("Card read : %d",value);
+}
+
+void ArServerModeSupply::supplyTask(){
+	/*while(true){
+		ArUtil::sleep(500);
+	}*/
+	printf("Supply task started with content : %s",myContent);
+	
+	
+	//lct.invoke();
+	
+	
+
+	//lct.open();
+	//lct.runAsync();
+}

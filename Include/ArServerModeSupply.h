@@ -28,6 +28,7 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 
 #include "Aria.h"
 #include "ArServerMode.h"
+#include "LecteurCarteTask.h"
 
 /*
 Mode in which the robot has to be supplied by an operator.
@@ -41,7 +42,7 @@ public:
   AREXPORT virtual ~ArServerModeSupply();
   AREXPORT virtual void activate(void);
   AREXPORT virtual void deactivate(void);
-  AREXPORT void supply(void);
+  AREXPORT void supply(const char*);
   AREXPORT void netSupply(ArServerClient *client, ArNetPacket *packet);
   AREXPORT virtual void userTask(void);
   AREXPORT virtual void checkDefault(void) { activate(); }
@@ -53,6 +54,10 @@ public:
 	  bool useLocationDependentDevices, bool internal = false);
   /// Gets whether we're using the range devices that depend on location
   AREXPORT bool getUseLocationDependentDevices(void);
+  //funtion triggered when new card read
+  //void readCardCB(int *);
+   AREXPORT void handleCardRead(int);
+
 protected:
   ArActionDeceleratingLimiter *myLimiterForward;
   ArActionDeceleratingLimiter *myLimiterBackward;
@@ -61,6 +66,13 @@ protected:
   ArActionGroupStop myStopGroup;
   bool myUseLocationDependentDevices;
   ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
+  //Test
+  ArFunctor1C<ArServerModeSupply, int> myCardReadCB;
+  //ArFunctor1C<ArServerModeSupply, int> functor1
+  const char * myContent;
+  void supplyTask();
+  LecteurCarteTask lct;
+ 
 };
 
 #endif // ARSERVEURMODESUPPLY_H
