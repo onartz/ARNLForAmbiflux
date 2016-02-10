@@ -32,9 +32,8 @@ AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server,
 					    bool defunct) : 
   ArServerMode(robot, server, "supply"),
   myStopGroup(robot),
-  myNetSupplyCB(this, &ArServerModeSupply::netSupply),
-  myCardReadCB(this, &ArServerModeSupply::handleCardRead),
-  lct(&myCardReadCB)
+  myNetSupplyCB(this, &ArServerModeSupply::netSupply)
+ 
 {
   myMode = "Supply";
   if (myServer != NULL)
@@ -81,7 +80,7 @@ AREXPORT void ArServerModeSupply::supply(const char *content)
   myContent = content;
   myMode = "Supply";
   myStatus = "Starting supply";
-  aSyncSupplyTask.setContent(content);
+  myASyncSupplyTask.setContent(content);
   activate();
 }
 
@@ -144,10 +143,7 @@ AREXPORT bool ArServerModeSupply::getUseLocationDependentDevices(void)
   return myUseLocationDependentDevices;
 }
 
-//Triggered when card has been read
-void ArServerModeSupply::handleCardRead(int value){
-  printf("Card read : %d",value);
-}
+
 
 void ArServerModeSupply::supplyTask(){
 	/*while(true){
@@ -156,7 +152,7 @@ void ArServerModeSupply::supplyTask(){
 	printf("Supply task started with content : %s",myContent);
 	//aSyncSupplyTask
 	
-	aSyncSupplyTask.runAsync();
+	myASyncSupplyTask.runAsync();
 	
 	//lct.invoke();
 	

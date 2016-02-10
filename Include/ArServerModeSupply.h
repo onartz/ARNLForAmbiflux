@@ -57,7 +57,7 @@ public:
   AREXPORT bool getUseLocationDependentDevices(void);
   //funtion triggered when new card read
   //void readCardCB(int *);
-   AREXPORT void handleCardRead(int);
+   
 
 protected:
   ArActionDeceleratingLimiter *myLimiterForward;
@@ -68,12 +68,12 @@ protected:
   bool myUseLocationDependentDevices;
   ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
   //Test
-  ArFunctor1C<ArServerModeSupply, int> myCardReadCB;
+  
   //ArFunctor1C<ArServerModeSupply, int> functor1
   const char * myContent;
   void supplyTask();
-  LecteurCarteTask lct;
-  SupplyTask aSyncSupplyTask;
+  
+  SupplyTask myASyncSupplyTask;
  
 };
 

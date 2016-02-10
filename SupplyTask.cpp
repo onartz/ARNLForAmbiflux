@@ -1,12 +1,52 @@
 #include "SupplyTask.h"
-SupplyTask::SupplyTask():myState(CALLING), myRunning(true){
+
+
+
+
+SupplyTask::SupplyTask():myState(CALLING), myRunning(true),
+myCardReadCB(this, &SupplyTask::handleCardRead),
+myCardReader(&myCardReadCB)
+{
+
+  // Create the sound queue.
+
+
+  // Set WAV file callbacks 
+  soundQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+  soundQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
+
+  // Notifications when the queue goes empty or non-empty.
+  //soundQueue.addQueueEmptyCallback(new ArGlobalFunctor(&queueNowEmpty));
+  //soundQueue.addQueueNonemptyCallback(new ArGlobalFunctor(&queueNowNonempty));
+
+  // Run the sound queue in a new thread
+  soundQueue.runAsync();
 }
 
 SupplyTask::~SupplyTask(){
 }
 
+void SupplyTask::queueNowEmpty() {
+  //printf("The sound queue is now empty.\n");
+}
+
+void SupplyTask::queueNowNonempty() {
+  //printf("The sound queue is now non-empty.\n");
+}
+
+bool SupplyTask::no() {
+  // just a false tautology
+  return false;
+}
+
 void SupplyTask::setContent(const char * content){
 	myContent = content;
+}
+
+//Triggered when card has been read
+void SupplyTask::handleCardRead(char * cardID){
+	myNewCardRead = true;
+    myCardRead = cardID;
 }
 
 void *SupplyTask::runThread(void *arg)
@@ -15,13 +55,35 @@ void *SupplyTask::runThread(void *arg)
 	{
 		switch(myState){
 			case CALLING:
+				//Let's sound something or call using playSound
 				ArLog::log(ArLog::Normal,"State CALLING");
 				ArLog::log(ArLog::Normal,"Content : %s",myContent);
+				soundQueue.play("c:\\temp\\ShortCircuit.wav");
+				
 				switchState(SupplyTask::WAITINGFORCARD);
 				break;
 			case SupplyTask::WAITINGFORCARD:
-				ArLog::log(ArLog::Normal,"State WAITINGFORCARD");
-				switchState(SupplyTask::WAITINGFOREND);
+				if(myNewState){
+					ArLog::log(ArLog::Normal,"State WAITINGFORCARD");
+					myCardReader.open();
+					myCardReader.runAsync();
+					myNewState = false;
+				}
+				//New card detected
+				if(myNewCardRead){
+					myNewCardRead = false;
+					myCardReader.stopRunning();
+					myCardReader.close();
+					printf("Card read : %s",myCardRead);
+					//Identify Card Owner
+
+					//identifyOwner();
+					//Say hello to Card Owner
+					//Tell content to charge
+
+					switchState(SupplyTask::WAITINGFOREND);
+					
+				}
 				break;
 			case SupplyTask::WAITINGFOREND:
 				ArLog::log(ArLog::Normal,"State WAITINGFOREND");
@@ -44,6 +106,7 @@ void SupplyTask::switchState(State state)
 {
   State oldState = myState;
   myState = state;
+  myNewState = true;
   myStartedState.setToNow();
   /*if (oldState != myState)
   {

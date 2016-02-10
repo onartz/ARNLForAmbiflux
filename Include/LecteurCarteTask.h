@@ -7,6 +7,8 @@
 #include "AriaUtil.h"
 #include "springprox.h"
 
+#define DEFAULT_TIMEOUT 4000
+
 class LecteurCarteTask : public ArASyncTask{
 public :
 	enum errorCodes
@@ -28,26 +30,29 @@ public :
 
 	//Constructor
 	LecteurCarteTask();
-	LecteurCarteTask(ArFunctor1<int>*);
+	LecteurCarteTask(ArFunctor1<char*>*);
 	virtual ~LecteurCarteTask();
 	virtual void * runThread(void *arg);
 	void lockMutex();
 	void unlockMutex();
 	int open();
-	void invoke();
-  void close();
-  int read(long);
-  int read();
+	//void invoke();
+    void close();
+    int read(long);
+    int read();
+
+  //Override base methods
+  void stopRunning();
  
   WORD getErrorCode();
   WORD getWarningCode();
   int getStatusCode();
   
-  char* getCardId(); //Pointeur sur BYTE
+  //char* getCardId(); //Pointeur sur BYTE
 
   //void setCardReadCB(ArFunctor1<char*> *);
   //Permet à une classe appelante de s'abonner à l'évenement
-  void setCardReadCB(ArFunctor1<int>*);
+  void setCardReadCB(ArFunctor1<char*>*);
   //void cardRead(char*);
 
 protected :
@@ -66,9 +71,10 @@ protected :
 	//char myErrorMessage[256];
 	//Message warning
 	//char myWarningMessage[256];
-	//Resultat de la lecture (juste Uid)
-	BYTE myCardId[12];
-	char myStrCardId[12];
+	//Resultat de la lecture (4 premiers bytes de uid)
+	//BYTE myCardId[4];
+
+	char myCardId[5];
 	//Etat du pooling
 	bool myPoolingStatus;
 	//Correspondances code erreur - message
@@ -90,7 +96,7 @@ protected :
 
 	//Un pointeur sur une siganture de fonction qui prend un entier comme paramètre
 	//doit être initialisée par la classe qui s'abonne à cet event
-	ArFunctor1<int>* myCardReadCB;
+	ArFunctor1<char*>* myCardReadCB;
 
 };
 #endif

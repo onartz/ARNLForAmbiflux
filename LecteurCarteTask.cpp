@@ -7,31 +7,33 @@
 //Constructeur
 
 LecteurCarteTask::LecteurCarteTask():
-uid_len(12),myStatusCode(STATUS_IDLE),myPoolingStatus(false),myErrorCode(ERR_NOERROR),myWarningCode(WARN_NOWARNING)
+uid_len(12),myStatusCode(STATUS_IDLE),
+myPoolingStatus(false),
+myErrorCode(ERR_NOERROR),
+myWarningCode(WARN_NOWARNING),
+myTimeout(DEFAULT_TIMEOUT)
 {		
 	strcpy_s(device,"");
-	//myCardReadCB->invoke(23);
 }
-LecteurCarteTask::LecteurCarteTask(ArFunctor1<int>* functor):
-uid_len(12),myStatusCode(STATUS_IDLE),myPoolingStatus(false),myErrorCode(ERR_NOERROR),myWarningCode(WARN_NOWARNING),
-myCardReadCB(functor)
-//myCardReadCB(this, &ArServerModeSupply::handleCardRead)
+
+LecteurCarteTask::LecteurCarteTask(ArFunctor1<char*>* functor):
+uid_len(12),myStatusCode(STATUS_IDLE),
+myPoolingStatus(false),
+myErrorCode(ERR_NOERROR),
+myWarningCode(WARN_NOWARNING),
+myCardReadCB(functor),
+myTimeout(DEFAULT_TIMEOUT)
 {		
 	strcpy_s(device,"");
-	//myCardReadCB->invoke(23);
 }
 
 LecteurCarteTask::~LecteurCarteTask(){
 }
 
-void LecteurCarteTask::setCardReadCB(ArFunctor1<int>* funct){
+void LecteurCarteTask::setCardReadCB(ArFunctor1<char*>* funct){
 myCardReadCB = funct;
 }
 
-void LecteurCarteTask::invoke(){
-	myCardReadCB->invoke(23);
-
-}
 //Connexion au lecteur et ouverture du lecteur
 int LecteurCarteTask::open()
 {
@@ -112,12 +114,13 @@ int LecteurCarteTask::read(long timeout)
 void *LecteurCarteTask::runThread(void *arg)
 {
 	int res = -1;
-	int i = 0;
+	//int i = 0;
 	while (myRunning==true)
 	{
+		//i++;
 		res = read();
 		ArUtil::sleep(2000);
-		myCardReadCB->invoke(i);
+		//myCardReadCB->invoke(myCardId);
 
 	}
 
@@ -125,14 +128,18 @@ void *LecteurCarteTask::runThread(void *arg)
   return NULL;
 }
 
+void LecteurCarteTask::stopRunning(){
+	ArASyncTask::stopRunning();
+	ArLog::log(ArLog::Normal, "Card reader stopped");
+}
 
 int LecteurCarteTask::read()
 {
-	//BYTE * bufCardId;
 	myErrorCode = ERR_NOERROR;
 	ArTime myStartTime;
 	myStartTime.setToNow();
 	SPROX_ControlLedY(0, 1, 0);
+
 	while(myStartTime.mSecSince() <= myTimeout)
 	{	
 		rc = MI_OK;	
@@ -157,14 +164,11 @@ int LecteurCarteTask::read()
 					myErrorCode = ERR_NOERROR;
 					SPROX_ControlLedY(1,0,0);
 					SPROX_ControlRF(FALSE);
-					//memcpy(bufCardId,uid,5);
-					sprintf(myStrCardId,"%02X%02X%02X%02X\0",uid[3], uid[2], uid[1], uid[0]);	
-					//invocatiton de la function avec un entier
-					myCardReadCB->invoke(23);
-					//myFunc2->invoke(23);
-	
-					//for(int i=0;i<4;i++)
-						//bufCardId[i]=uid[i];
+					
+					sprintf(myCardId,"%02X%02X%02X%02X\0",uid[3], uid[2], uid[1], uid[0]);
+					//invocatiton de la function
+					myCardReadCB->invoke(myCardId);
+					
 					return(CARD);
 				}
 				break;
@@ -178,76 +182,10 @@ int LecteurCarteTask::read()
 	SPROX_ControlRF(FALSE);
 	return(NOCARD);
 }
-		///* une carte a été trouvée */
-		//if (rc != MI_NOTAGERR)
-		//{
-		//	/* Carte Mais pb de lecture */
-		//	if (rc != MI_OK) 
-		//	{
-		//		printf("Pb de lecture\n");
-		//		/* Other error */
-		//		myWarningCode=WARN_INVALIDCARD;
-		//		if (rc < -128)
-		//			goto done; 
-		//		else 
-		//			goto close;
-		//	}
-		//	myWarningCode=WARN_NOWARNING;
-		//	
-		//	/* Halt currently active tag */
-		//	rc = SPROX_A_Halt();
-		//	if (rc != MI_OK)
-		//	{
-		//		printf("Warning\n");
-		//		myWarningCode=WARN_INVALIDCARD;
-		//		//strcpy_s(myWarningMessage,"Carte non reconnue Halt");
-		//		if (rc < -128)
-		//		goto close;           /* Fatal error */
-		//	}
-		//	//On signale l evenement cartelue
-		//	carteLue.signal();
-		//	myMutex.unlock();
-		//	break;
-		//	}
-		//else
-		//{
-		//	myMutex.unlock();
-		//}	
-		
 	
-	//close:
-	//{
-	//	/*Fin de la boucle*/
-	//	/* Red LED on */
-	//	SPROX_ControlLedY(1,0,0);	
-
-	//	myMutex.unlock();		
-	//	stopPooling();
-	//	myPoolingStatus=false;
-	//}
 
 
 
-
-//Accesseurs
-char * LecteurCarteTask::getCardId()
-{
-	return myStrCardId;
-}
-
-//char * LecteurCarte::getStatus()
-//{
-//	return myStatus;
-//}
-//
-//char * LecteurCarte::getErrorMessage()
-//{
-//	return myErrorMessage;
-//}
-//char * LecteurCarte::getWarningMessage()
-//{
-//	return myWarningMessage;
-//}
 
 
 WORD LecteurCarteTask::getErrorCode()
