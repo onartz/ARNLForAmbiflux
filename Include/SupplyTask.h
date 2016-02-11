@@ -25,6 +25,7 @@ public :
   };
 	SupplyTask();
 	SupplyTask(const char *);
+	SupplyTask(const char * content, ArFunctor1<char *> *functor);
 	void queueNowEmpty();
     void queueNowNonempty();
     bool no();
@@ -38,6 +39,10 @@ public :
    void setContent(const char *);
    void handleCardRead(char *);
    void handleHttpResponse(char*);
+
+   void setSupplyDoneCB(ArFunctor1<char*>*);
+   void setSupplyFailedCB(ArFunctor1<char*>*);
+
    
    
 protected:
@@ -60,6 +65,13 @@ protected:
 	LecteurCarteTask myCardReader;
     ArFunctor1C<SupplyTask, char *> myCardReadCB;
 	ArFunctor1C<SupplyTask, char *> myHttpResponseHandler;
+	ArFunctor1<char*> *mySupplyDoneCB;
+	ArFunctor1<char*> *mySupplyFailedCB;
+	//ArFunctor1C<SupplyTask, char*>* mySupplyFailedCB;
+	
+
+
+
 	
 	ArSoundsQueue soundQueue;
 

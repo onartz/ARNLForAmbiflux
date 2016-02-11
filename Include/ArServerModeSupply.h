@@ -45,6 +45,8 @@ public:
   AREXPORT virtual void deactivate(void);
   AREXPORT void supply(const char*);
   AREXPORT void netSupply(ArServerClient *client, ArNetPacket *packet);
+  AREXPORT void handleSupplyDone(char *);
+  AREXPORT void handleSupplyFailed(char *);
   AREXPORT virtual void userTask(void);
   AREXPORT virtual void checkDefault(void) { activate(); }
   AREXPORT virtual ArActionGroup *getActionGroup(void) { return &myStopGroup; }
@@ -67,7 +69,11 @@ protected:
   ArActionGroupStop myStopGroup;
   bool myUseLocationDependentDevices;
   ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
-  //Test
+
+  //Functors passed to a class
+  ArFunctor1C<ArServerModeSupply, char*> mySupplyDoneCB;
+  ArFunctor1C<ArServerModeSupply, char*> mySupplyFailedCB;
+  
   
   //ArFunctor1C<ArServerModeSupply, int> functor1
   const char * myContent;

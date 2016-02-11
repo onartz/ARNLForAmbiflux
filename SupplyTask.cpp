@@ -53,6 +53,19 @@ void SupplyTask::handleHttpResponse(char * response){
 	myHttpResponse = response;
 }
 
+
+void SupplyTask::setSupplyDoneCB(ArFunctor1<char*> *f){
+	mySupplyDoneCB = f;
+}
+
+void SupplyTask::setSupplyFailedCB(ArFunctor1<char*> *f){
+	mySupplyFailedCB = f;
+}
+
+//void SupplyTask::addSupplyFailedCB(ArFunctor1C<SupplyTask, char*>* f){
+//	mySupplyFailedCB = f;
+//}
+
 void *SupplyTask::runThread(void *arg)
 {
 	DALRest dr(&myHttpResponseHandler);
@@ -102,6 +115,7 @@ void *SupplyTask::runThread(void *arg)
 						
 						try{	
 							boost::property_tree::ptree pt = JSONParser::parse(myHttpResponse);
+							
 							myOperatorsName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("firstname").c_str()));
 							
 							//printf("Operators name : %s",myOperatorsName.c_str());
@@ -151,6 +165,15 @@ void *SupplyTask::runThread(void *arg)
 				ArLog::log(ArLog::Normal,"State END");
 				//Say ByeBye
 				myRunning = false;
+				
+				//char * result = new char[myOperatorsName.size() + 1];
+				//std::copy(myOperatorsName.begin(), myOperatorsName.end(), result);
+				//result[myOperatorsName.size()] = '\0'; // don't forget the terminating 0
+
+			// don't forget to free the string after finished using it
+				//delete[] myOperatorsName;
+
+				mySupplyDoneCB->invoke(myCardRead);
 				break;
 		}
 		ArUtil::sleep(500);

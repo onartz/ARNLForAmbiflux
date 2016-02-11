@@ -32,20 +32,36 @@ AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server,
 					    bool defunct) : 
   ArServerMode(robot, server, "supply"),
   myStopGroup(robot),
-  myNetSupplyCB(this, &ArServerModeSupply::netSupply)
+  myNetSupplyCB(this, &ArServerModeSupply::netSupply),
+  mySupplyDoneCB(this,&ArServerModeSupply::handleSupplyDone),
+  mySupplyFailedCB(this,&ArServerModeSupply::handleSupplyFailed)
  
 {
   myMode = "Supply";
+  
   if (myServer != NULL)
   {
     addModeData("supply", "supply the robot", &myNetSupplyCB,
 		"string: content", "none", "Supply", "RETURN_NONE");
+	myASyncSupplyTask.setSupplyDoneCB(&mySupplyDoneCB);
+	myASyncSupplyTask.setSupplyFailedCB(&mySupplyFailedCB);
+	//myServer->addData("supplyInfos",......
+
   }
 }
 
 AREXPORT ArServerModeSupply::~ArServerModeSupply()
 {
 }
+
+void ArServerModeSupply::handleSupplyDone(char * res){
+	myStatus = "Supply done by " + string(res);
+}
+
+void ArServerModeSupply::handleSupplyFailed(char * res){
+	myStatus = "Supply failed";
+}
+
 
 AREXPORT void ArServerModeSupply::activate(void)
 {
@@ -61,7 +77,6 @@ AREXPORT void ArServerModeSupply::deactivate(void)
   myStopGroup.deactivate();
   baseDeactivate();
 }
-
 
 
 AREXPORT void ArServerModeSupply::netSupply(ArServerClient *client, 
@@ -81,32 +96,14 @@ AREXPORT void ArServerModeSupply::supply(const char *content)
   myMode = "Supply";
   myStatus = "Starting supply";
   myASyncSupplyTask.setContent(content);
+  this->lockMode();
   activate();
 }
-
-//AREXPORT void ArServerModeGoto::serverGotoGoal(ArServerClient * /*client*/, 
-//					       ArNetPacket *packet)
-//{
-//  char buf[512];
-//  packet->bufToStr(buf, sizeof(buf)-1);
-//  ArLog::log(ArLog::Normal, "Going to goal %s", buf);
-//  //myRobot->lock();
-//  gotoGoal(buf);
-//  //myRobot->unlock();
-//}
 
 
 AREXPORT void ArServerModeSupply::userTask(void)
 {
- /* if (myRobot->getVel() < 2 && myRobot->getRotVel() < 2)
-  {
-    myStatus = "Stopped";
-  }
-  else
-  {
-    setActivityTimeToNow();
-    myStatus = "Stopping";
-  }*/
+ 
 }
 
 AREXPORT void ArServerModeSupply::addToConfig(ArConfig *config, 
