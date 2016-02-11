@@ -146,18 +146,8 @@ AREXPORT bool ArServerModeSupply::getUseLocationDependentDevices(void)
 
 
 void ArServerModeSupply::supplyTask(){
-	/*while(true){
-		ArUtil::sleep(500);
-	}*/
-	printf("Supply task started with content : %s",myContent);
-	//aSyncSupplyTask
 	
+	printf("Supply task started with content : %s",myContent);
 	myASyncSupplyTask.runAsync();
 	
-	//lct.invoke();
-	
-	
-
-	//lct.open();
-	//lct.runAsync();
 }

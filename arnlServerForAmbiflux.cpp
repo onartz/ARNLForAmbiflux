@@ -4,13 +4,13 @@
  The robot should be able to respond to Supply, deliver, talk commands...
 */
 
+#include <time.h>
+#include <stdio.h>
+#include <assert.h>
 #include "Aria.h"
 #include "ArNetworking.h"
 #include "Arnl.h"
-//#include "ArSoundsQueue.h"
-//#include "ArSoundPlayer.h"
 #include "ArServerModeSupply.h"
-
 
 #include "ArLocalizationTask.h"
 #include "ArDocking.h"

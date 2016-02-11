@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="../../bin"
-			IntermediateDirectory="../obj/$(ConfigurationName)-VC9"
+			IntermediateDirectory="obj/$(ConfigurationName)-VC9"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../Aria/ArSpeechSynth_Cepstral/internalLibs/include;../../../Aria/ArSpeechSynth_Cepstral/include;../../aria/ArSpeechSynth_Cepstral/internalLibs/include;../../../aria/include;../../../aria/arnetworking/include;../../include;./include;../include"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\MobileRobots\ARNL\include\Arnetworking&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\Aria&quot;;.\include;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internallibs\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\include&quot;;&quot;C:\Program Files\MobileRobots\Arnl\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\include&quot;;C:\Temp\boost_1_54_0\boost_1_54_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;ARIADLL_EXPORTS"
 				StringPooling="false"
 				MinimalRebuild="false"
@@ -67,11 +67,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib ArSpeechSynth_Cepstral_Debug_VC9.lib $(NOINHERIT)"
+				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib ArSpeechSynth_Cepstral_Debug_VC9.lib SpringProx.lib $(NOINHERIT)"
 				OutputFile="$(OutDir)\$(ProjectName)DebugVC9.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="../../../Aria/bin;../../../Aria/lib;../../../Aria/ArSpeechSynth_Cepstral/internalLibs/lib;../../lib;../lib;../../bin;./lib"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\MobileRobots\ARNL\bin&quot;;.\lib;&quot;C:\Program Files\MobileRobots\Aria\bin&quot;;&quot;C:\Program Files\MobileRobots\ARNL\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internalLibs\lib&quot;"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
@@ -291,6 +291,22 @@
 				RelativePath=".\ArServerModeSupply.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\DALRest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\JSONParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LecteurCarteTask.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SupplyTask.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -299,6 +315,22 @@
 			>
 			<File
 				RelativePath=".\Include\ArServerModeSupply.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\DALRest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\JSONParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\LecteurCarteTask.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\SupplyTask.h"
 				>
 			</File>
 		</Filter>
@@ -310,6 +342,10 @@
 		</Filter>
 		<File
 			RelativePath="..\params\arnl.p"
+			>
+		</File>
+		<File
+			RelativePath=".\ReadMe.txt"
 			>
 		</File>
 	</Files>
