@@ -45,6 +45,7 @@ AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server,
 		"string: content", "none", "Supply", "RETURN_NONE");
 	myASyncSupplyTask.setSupplyDoneCB(&mySupplyDoneCB);
 	myASyncSupplyTask.setSupplyFailedCB(&mySupplyFailedCB);
+	//myServer->addData("supplyInfos","Supply informations",
 	//myServer->addData("supplyInfos",......
 
   }
@@ -56,24 +57,33 @@ AREXPORT ArServerModeSupply::~ArServerModeSupply()
 
 void ArServerModeSupply::handleSupplyDone(char * res){
 	myStatus = "Supply done by " + string(res);
+	ArLog::log(ArLog::Normal, myStatus.c_str());
 }
 
 void ArServerModeSupply::handleSupplyFailed(char * res){
-	myStatus = "Supply failed";
+	
+	myStatus = "Supply failed : " + string(res);
+	ArLog::log(ArLog::Normal, myStatus.c_str());
 }
 
 
 AREXPORT void ArServerModeSupply::activate(void)
 {
-  if (isActive() || !baseActivate())
+	//Modif ON
+ if (isActive() || !baseActivate())
     return;
-  //setActivityTimeToNow();
+
+ /*if (!baseActivate())
+    return;*/
+  setActivityTimeToNow();
   //myStatus = "Starting supply operation";
   supplyTask();
 }
 
 AREXPORT void ArServerModeSupply::deactivate(void)
 {
+	if(myASyncSupplyTask.getRunning())
+		myASyncSupplyTask.stopRunning();
   myStopGroup.deactivate();
   baseDeactivate();
 }
@@ -95,7 +105,7 @@ AREXPORT void ArServerModeSupply::supply(const char *content)
   myContent = content;
   myMode = "Supply";
   myStatus = "Starting supply";
-  myASyncSupplyTask.setContent(content);
+  myASyncSupplyTask.init(content);
   this->lockMode();
   activate();
 }

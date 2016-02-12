@@ -5,8 +5,10 @@ using namespace std;
 DALRest::DALRest(){
 }
 
-DALRest::DALRest(ArFunctor1<char*> *funct):
-myResponseCB(funct){
+DALRest::DALRest(ArFunctor1<char*> *responseCB, ArFunctor * connectFailedCB):
+myResponseCB(responseCB),
+myConnectFailedCB(connectFailedCB)
+{
 }
 
 void *DALRest::runThread(void *arg)
@@ -20,7 +22,8 @@ void *DALRest::runThread(void *arg)
 	
 	if(!(sock.connect(WCFHOSTIPADDRESS,WCFSERVICEPORT,ArSocket::TCP,0)))
 	{
-		return false;
+		myConnectFailedCB->invoke();
+		return NULL;
 	}
 	string response="";
 	//Envoi de la requete
@@ -31,6 +34,8 @@ void *DALRest::runThread(void *arg)
 	{
 			sock.close();
 			ArLog::log(ArLog::Verbose, "socketClientExample: Server error: \r\n%s", buff);
+			myConnectFailedCB->invoke();
+			return NULL;
 
 	}
 
@@ -47,7 +52,8 @@ void *DALRest::runThread(void *arg)
 	if(ptr==NULL)
 	{
 		sock.close();
-		myResponseCB->invoke(0);
+		myConnectFailedCB->invoke();
+		return NULL;
 	}
 
 	char *ptrFin=strstr(&response[0],"}HTTP");
@@ -58,7 +64,6 @@ void *DALRest::runThread(void *arg)
 	sock.close();
     char *cstr = new char[s.length() + 1];
 	strcpy(cstr, s.c_str());
-
 
     myResponseCB->invoke(cstr);
 	return NULL;
@@ -72,6 +77,19 @@ void DALRest::sendRequest(ArFunctor1<char*> *funct,string requestType, int param
 	string s = static_cast<ostringstream*>( &(ostringstream() << param) )->str();
 	sendRequest(funct, requestType, s);
 	//return(sendRequest(requestType, s));
+}
+
+void DALRest::sendRequest(string requestType, int param)
+{
+	//Conversion int to string
+	string s = static_cast<ostringstream*>( &(ostringstream() << param) )->str();
+	sendRequest(requestType, s);
+}
+void DALRest::sendRequest(string requestType, string param)
+{
+	//Création de la requête
+	sprintf(myRequest,"GET %s%s/%s HTTP/1.1\r\nHost: %s\r\n\r\n",SERVICE,requestType.c_str(),param.c_str(),HOSTWEBADDRESS);
+	runAsync();
 }
 
 DALRest::~DALRest(){

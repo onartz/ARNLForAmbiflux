@@ -14,7 +14,7 @@ using namespace std;
 #define WCFHOSTIPADDRESS	"100.74.39.204"
 #define HOSTWEBADDRESS	"100.74.39.204"
 #define HOSTURL		"http://100.74.39.204"
-#define SERVICE	"/AmbifluxWcfService/Ambiflux.svc/json/"
+#define SERVICE	"/AmbifluxWcfService/Ambiflux.svc/jso/"
 #define REQUEST	"srma"
 #define REQ_LOGSRMA	"logSRMA"
 #define REQ_WORKORDERS	"workorders"
@@ -25,12 +25,14 @@ class DALRest : public ArASyncTask
 {
 public:
 	DALRest();
-	DALRest(ArFunctor1<char*>*);
+	DALRest(ArFunctor1<char*>* responseCB, ArFunctor* connectFailedCB);
 	virtual ~DALRest();
 	virtual void * runThread(void *arg);
 	void lockMutex();
 	void unlockMutex();
 	void setRequest(char*);
+	void sendRequest(string req, int param);
+	void sendRequest(string req, string param);
 	void sendRequest(ArFunctor1<char*> *, string req, int param);
 	void sendRequest(ArFunctor1<char*> *, string req, string param);
 
@@ -38,6 +40,7 @@ private :
 	//Send request to the server
 	
 	ArFunctor1<char*> *myResponseCB;
+	ArFunctor *myConnectFailedCB;
 	char myRequest[128];
 };
 

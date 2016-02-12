@@ -69,6 +69,7 @@ protected:
   ArActionGroupStop myStopGroup;
   bool myUseLocationDependentDevices;
   ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
+  //ArFunctor2C<ArServerModeDock, ArServerClient *, ArNetPacket *> myServerGetSupplyInformationsCB;
 
   //Functors passed to a class
   ArFunctor1C<ArServerModeSupply, char*> mySupplyDoneCB;

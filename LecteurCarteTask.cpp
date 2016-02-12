@@ -46,8 +46,9 @@ int LecteurCarteTask::open()
 		myStatusCode=STATUS_IDLE;
 		return(ERR_NOTFOUND);
 	}
+	SPROX_ControlLedY(1,0,0);
 	
-	SPROX_ControlLedY(1,1,1);
+	/*SPROX_ControlLedY(1,1,1);
 	ArUtil::sleep(100);
 	SPROX_ControlLedY(0,0,0);
 	ArUtil::sleep(100);
@@ -62,7 +63,9 @@ int LecteurCarteTask::open()
 	SPROX_ControlLedY(1,1,1);
 	ArUtil::sleep(100);
 	SPROX_ControlLedY(0,0,0);
-	ArUtil::sleep(100);
+	ArUtil::sleep(100);*/
+
+	//SPROX_ControlLedY(1,0,0);
 	
 	/* Configure reader in ISO 14443-A mode */
 	rc = SPROX_SetConfig(CFG_MODE_ISO_14443_A);
@@ -73,7 +76,7 @@ int LecteurCarteTask::open()
 		return(ERR_CONFIGURATIONFAILED);
 	}
 	/*Ca a marche*/
-	SPROX_ControlLedY(0,0,1);
+	//SPROX_ControlLedY(0,0,1);
 	myStatusCode=STATUS_OPEN;
 	ArLog::log(ArLog::Verbose,"Lecteur Ouvert");
 	return(ERR_NOERROR);	
@@ -82,7 +85,7 @@ int LecteurCarteTask::open()
 
 void LecteurCarteTask::close()
 {
-	SPROX_ControlLedY(1,1,1);
+	/*SPROX_ControlLedY(1,1,1);
 	ArUtil::sleep(100);
 	SPROX_ControlLedY(0,0,0);
 	ArUtil::sleep(100);
@@ -97,15 +100,17 @@ void LecteurCarteTask::close()
 	SPROX_ControlLedY(1,1,1);
 	ArUtil::sleep(100);
 	SPROX_ControlLedY(0,0,0);
-	ArUtil::sleep(100);
+	ArUtil::sleep(100);*/
 	//for(int i=0;i<12;i++)
 		//uid[i]=0x00;
+	SPROX_ControlLedY(0,0,0);
 	SPROX_ReaderClose();
 	myStatusCode=STATUS_CLOSED;
 }
 
 int LecteurCarteTask::read(long timeout)
 {
+	SPROX_ControlLedY(0,1,0);
 	myTimeout = timeout;
 	return(read());
 }
@@ -113,14 +118,12 @@ int LecteurCarteTask::read(long timeout)
 
 void *LecteurCarteTask::runThread(void *arg)
 {
+	myRunning = true;
 	int res = -1;
-	//int i = 0;
 	while (myRunning==true)
 	{
-		//i++;
 		res = read();
-		ArUtil::sleep(2000);
-		//myCardReadCB->invoke(myCardId);
+		ArUtil::sleep(1000);
 
 	}
 
@@ -138,7 +141,7 @@ int LecteurCarteTask::read()
 	myErrorCode = ERR_NOERROR;
 	ArTime myStartTime;
 	myStartTime.setToNow();
-	SPROX_ControlLedY(0, 1, 0);
+	//SPROX_ControlLedY(0, 1, 0);
 
 	while(myStartTime.mSecSince() <= myTimeout)
 	{	
@@ -162,7 +165,7 @@ int LecteurCarteTask::read()
 				if(rc==MI_OK)
 				{
 					myErrorCode = ERR_NOERROR;
-					SPROX_ControlLedY(1,0,0);
+					SPROX_ControlLedY(0,0,1);
 					SPROX_ControlRF(FALSE);
 					
 					sprintf(myCardId,"%02X%02X%02X%02X\0",uid[3], uid[2], uid[1], uid[0]);

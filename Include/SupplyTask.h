@@ -12,16 +12,18 @@
 #include "DALRest.h"
 //#include "ArCepstral.h"
 
+#define TIMEOUT_ATTENTE_HUMAIN 10
+#define TIMEOUT_ATTENTE_SERVER 3
+
 class SupplyTask : public ArASyncTask{
 public :
 	enum State {
-		CALLING,
-		WAITING_FOR_CARD,
-		WAITING_FOR_RESPONSE,
-		TELLING_WHAT_TO_DO,
-		WAITING_FOR_CARD_TO_CLOSE,
-		WAITINGFOREND,
-		END
+		FSM_START,
+		FSM_WAITING_FOR_HUMAN_TO_START,
+		FSM_WAITING_FOR_IDENTIFICATION,
+		FSM_GIVING_INFORMATIONS,
+		FSM_WAITING_FOR_HUMAN_TO_END,
+		FSM_END
   };
 	SupplyTask();
 	SupplyTask(const char *);
@@ -34,11 +36,13 @@ public :
 	virtual void * runThread(void *arg);
 	void lockMutex();
 	void unlockMutex();
-	/// Gets the docking state we're in
+	void stopRunning();
+	/// Gets the  state we're in
    virtual State getState(void) const { return myState; }
-   void setContent(const char *);
+   void init(const char *);
    void handleCardRead(char *);
    void handleHttpResponse(char*);
+   void handleHttpFailed(void);
 
    void setSupplyDoneCB(ArFunctor1<char*>*);
    void setSupplyFailedCB(ArFunctor1<char*>*);
@@ -59,19 +63,20 @@ protected:
 	//Card ID
 	char * myCardRead;
 
-	bool myHttpResponseReceived;
+	bool myHttpNewResponse;
 	char * myHttpResponse;
+
+	bool myHttpRequestFailed;
 
 	LecteurCarteTask myCardReader;
     ArFunctor1C<SupplyTask, char *> myCardReadCB;
-	ArFunctor1C<SupplyTask, char *> myHttpResponseHandler;
+	ArFunctor1C<SupplyTask, char *> myHttpResponseCB;
+	ArFunctorC<SupplyTask> myHttpFailedCB;
+
 	ArFunctor1<char*> *mySupplyDoneCB;
 	ArFunctor1<char*> *mySupplyFailedCB;
 	//ArFunctor1C<SupplyTask, char*>* mySupplyFailedCB;
-	
-
-
-
+	DALRest myHttpRequest;
 	
 	ArSoundsQueue soundQueue;
 

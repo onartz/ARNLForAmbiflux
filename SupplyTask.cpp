@@ -1,28 +1,39 @@
 #include "SupplyTask.h"
 
-SupplyTask::SupplyTask():myState(CALLING), myRunning(true),
+SupplyTask::SupplyTask():myState(FSM_START),
+myRunning(true),
 myCardReadCB(this, &SupplyTask::handleCardRead),
-myHttpResponseHandler(this, &SupplyTask::handleHttpResponse),
-myCardReader(&myCardReadCB)
+myHttpResponseCB(this, &SupplyTask::handleHttpResponse),
+myHttpFailedCB(this, &SupplyTask::handleHttpFailed),
+myCardReader(&myCardReadCB),
+myHttpRequest(&myHttpResponseCB, &myHttpFailedCB),
+myHttpResponse(NULL)
 {
+	// Notifications when the queue goes empty or non-empty.
+  
+	soundQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+	soundQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
+
+	//soundQueue.runAsync();
 	/*if(!(myCepstral.init())){
 		ArLog::log(ArLog::Normal,"Cepstral failed");
 	}*/
-  // Create the sound queue.
-  // Set WAV file callbacks 
-  soundQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
-  soundQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
-
-  // Notifications when the queue goes empty or non-empty.
-  //soundQueue.addQueueEmptyCallback(new ArGlobalFunctor(&queueNowEmpty);
-  //soundQueue.addQueueNonemptyCallback(new ArGlobalFunctor(&queueNowNonempty));
-
-  // Run the sound queue in a new thread
-  soundQueue.runAsync();
+  
 }
 
 SupplyTask::~SupplyTask(){
 	soundQueue.stopRunning();
+}
+
+void SupplyTask::init(const char * content){
+	myContent = content;
+	myHttpNewResponse = false;
+	myNewCardRead = false;
+	myHttpRequestFailed = false;
+	myCardRead = NULL;
+	myHttpResponse = NULL;
+	switchState(FSM_START);
+	soundQueue.runAsync();
 }
 
 void SupplyTask::queueNowEmpty() {
@@ -38,9 +49,7 @@ bool SupplyTask::no() {
   return false;
 }
 
-void SupplyTask::setContent(const char * content){
-	myContent = content;
-}
+
 
 //Triggered when card has been read
 void SupplyTask::handleCardRead(char * cardID){
@@ -49,8 +58,14 @@ void SupplyTask::handleCardRead(char * cardID){
 }
 
 void SupplyTask::handleHttpResponse(char * response){
-	myHttpResponseReceived = true;
+	myHttpNewResponse = true;
 	myHttpResponse = response;
+}
+
+void SupplyTask::handleHttpFailed(){
+	ArLog::log(ArLog::Normal,"Http request failed");
+	myHttpRequestFailed = true;
+
 }
 
 
@@ -62,31 +77,38 @@ void SupplyTask::setSupplyFailedCB(ArFunctor1<char*> *f){
 	mySupplyFailedCB = f;
 }
 
-//void SupplyTask::addSupplyFailedCB(ArFunctor1C<SupplyTask, char*>* f){
-//	mySupplyFailedCB = f;
-//}
+void SupplyTask::stopRunning(){
+	soundQueue.stopRunning();
+}
+
 
 void *SupplyTask::runThread(void *arg)
 {
-	DALRest dr(&myHttpResponseHandler);
-	
+	myRunning = true;
+	ArLog::log(ArLog::Normal,"Supply task thread started");
 	while (myRunning==true)
 	{
 		switch(myState){
-			case CALLING:
+			case FSM_START:
 				//Let's sound something or call using playSound
-				ArLog::log(ArLog::Normal,"State CALLING");
+				ArLog::log(ArLog::Normal,"State FSM_START");
 				//ArLog::log(ArLog::Normal,"Content : %s",myContent);
-				soundQueue.play("c:\\temp\\ShortCircuit.wav");
-		
-				switchState(SupplyTask::WAITING_FOR_CARD);
+				soundQueue.play("c:\\temp\\ShortCircuit.wav");	
+				switchState(FSM_WAITING_FOR_HUMAN_TO_START);
 				break;
-			case WAITING_FOR_CARD:
+			case FSM_WAITING_FOR_HUMAN_TO_START:
 				if(myNewState){
-					ArLog::log(ArLog::Normal,"State WAITING_FOR_CARD");
+					ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_START");
 					myCardReader.open();
 					myCardReader.runAsync();
 					myNewState = false;
+				}
+				if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
+					myCardReader.stopRunning();
+					myCardReader.close();
+					mySupplyFailedCB->invoke("Human not present\0");
+					switchState(FSM_END);
+					break;
 				}
 				//New card detected
 				if(myNewCardRead){
@@ -97,88 +119,92 @@ void *SupplyTask::runThread(void *arg)
 					//Identify Card Owner
 					std::string req("employeeByCardId");
 					std::string param(myCardRead);
-					dr.sendRequest(&myHttpResponseHandler, req, param);	
-					switchState(SupplyTask::WAITING_FOR_RESPONSE);	
-				}
+					//Send http request to REST Server
+					//myHttpRequest.sendRequest(&myHttpResponseCB, req, param);	
+					myHttpRequest.sendRequest(req, param);	
+					switchState(FSM_WAITING_FOR_IDENTIFICATION);	
+				}	
 				break;
 
-				case SupplyTask::WAITING_FOR_RESPONSE:
+				case FSM_WAITING_FOR_IDENTIFICATION:
 					if(myNewState){
-						ArLog::log(ArLog::Normal,"State WAITING_FOR_RESPONSE");
+						ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_IDENTIFICATION");
 						myNewState = false;
+					}	
+					if(myHttpRequestFailed){
+						switchState(FSM_END);
+						mySupplyFailedCB->invoke("Http server failed\0");
+						break;
 					}
-					if(!myHttpResponseReceived)
+
+					if(!myHttpNewResponse)
 						break;
 					if(myHttpResponse == NULL)
 						break;
-					if(strcmp(myHttpResponse,"")){
-						
+					if(strcmp(myHttpResponse,""))
+					{
 						try{	
-							boost::property_tree::ptree pt = JSONParser::parse(myHttpResponse);
-							
-							myOperatorsName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("firstname").c_str()));
-							
+							boost::property_tree::ptree pt = JSONParser::parse(myHttpResponse);		
+							myOperatorsName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("firstname").c_str()));						
 							//printf("Operators name : %s",myOperatorsName.c_str());
 
 							//lastName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("lastname").c_str()));
 							//cardId = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("cardID").c_str()));
 							//emailAddress = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("emailAddress").c_str()));	
-						}
-						catch(std::exception const&  ex)
-						{
+							}
+						catch(std::exception const&  ex){
 							myHttpResponse = NULL;
 							printf("JSON Error. %s", ex.what());
 						}
-						
+							
 						myHttpResponse = NULL;
-						switchState(SupplyTask::TELLING_WHAT_TO_DO);
-
+						switchState(FSM_GIVING_INFORMATIONS);
 					}
 					break;
-				case TELLING_WHAT_TO_DO:
+				case FSM_GIVING_INFORMATIONS:
 					if(myNewState){
-						ArLog::log(ArLog::Normal,"State TELLING_WHAT_TO_DO");
+						ArLog::log(ArLog::Normal,"State FSM_GIVING_INFORMATIONS");
 						myNewState = false;
 					}
-					switchState(WAITING_FOR_CARD_TO_CLOSE);
-
+					switchState(FSM_WAITING_FOR_HUMAN_TO_END);
 
 					break;
-				case WAITING_FOR_CARD_TO_CLOSE:
+				case FSM_WAITING_FOR_HUMAN_TO_END:
 					if(myNewState){
-						ArLog::log(ArLog::Normal,"State WAITING_FOR_CARD_TO_CLOSE");
+						ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_HUMAN_TO_END");
 						myCardReader.open();
 						myCardReader.runAsync();
 						myNewState = false;
 					}
+					if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
+						myCardReader.stopRunning();
+						myCardReader.close();
+						mySupplyFailedCB->invoke("Human forgot me\0");
+						switchState(FSM_END);
+						break;
+					}
+					
 					//New card detected
 					if(myNewCardRead){
 						myNewCardRead = false;
 						myCardReader.stopRunning();
 						myCardReader.close();
-						switchState(SupplyTask::END);	
+						mySupplyDoneCB->invoke(myCardRead);
+						switchState(FSM_END);	
 					}
 					break;
 
 		
-			case SupplyTask::END:
-				ArLog::log(ArLog::Normal,"State END");
-				//Say ByeBye
-				myRunning = false;
-				
-				//char * result = new char[myOperatorsName.size() + 1];
-				//std::copy(myOperatorsName.begin(), myOperatorsName.end(), result);
-				//result[myOperatorsName.size()] = '\0'; // don't forget the terminating 0
-
-			// don't forget to free the string after finished using it
-				//delete[] myOperatorsName;
-
-				mySupplyDoneCB->invoke(myCardRead);
-				break;
-		}
-		ArUtil::sleep(500);
+				case FSM_END:
+					ArLog::log(ArLog::Normal,"State FSM_END");
+					//Say ByeBye
+					myRunning = false;
+					break;
+			}
+		ArUtil::sleep(100);
 	}
 
+	ArLog::log(ArLog::Normal,"Supply task thread stopped");
   // return out here, means the thread is done
   return NULL;
 }
