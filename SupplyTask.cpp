@@ -64,8 +64,8 @@ void SupplyTask::handleHttpResponse(char * response){
 
 void SupplyTask::handleHttpFailed(){
 	ArLog::log(ArLog::Normal,"Http request failed");
+	strcpy(errorMessage,"Http request failed\0");
 	myHttpRequestFailed = true;
-
 }
 
 
@@ -95,6 +95,7 @@ void *SupplyTask::runThread(void *arg)
 				//ArLog::log(ArLog::Normal,"Content : %s",myContent);
 				soundQueue.play("c:\\temp\\ShortCircuit.wav");	
 				switchState(FSM_WAITING_FOR_HUMAN_TO_START);
+				attemptFailed = 0;
 				break;
 			case FSM_WAITING_FOR_HUMAN_TO_START:
 				if(myNewState){
@@ -104,10 +105,16 @@ void *SupplyTask::runThread(void *arg)
 					myNewState = false;
 				}
 				if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
-					myCardReader.stopRunning();
-					myCardReader.close();
-					mySupplyFailedCB->invoke("Human not present\0");
-					switchState(FSM_END);
+					if(attemptFailed++ > MAX_ATTEMPTS_FAILED){
+						myCardReader.stopRunning();
+						myCardReader.close();
+						strcpy(errorMessage,"Human not present\0");
+						switchState(FSM_FAILED);
+						
+					}
+					else{
+						switchState(FSM_START);
+					}
 					break;
 				}
 				//New card detected
@@ -115,16 +122,27 @@ void *SupplyTask::runThread(void *arg)
 					myNewCardRead = false;
 					myCardReader.stopRunning();
 					myCardReader.close();
+					switchState(FSM_IDENTIFICATION);		
+				}	
+				break;
 
-					//Identify Card Owner
+			case FSM_IDENTIFICATION:
+				if(myNewState){
+					ArLog::log(ArLog::Normal,"State FSM_IDENTIFICATION");
+					//attemptFailed = 0;
+					myNewState = false;
+					//Identify Card Owner	
 					std::string req("employeeByCardId");
 					std::string param(myCardRead);
+							
 					//Send http request to REST Server
 					//myHttpRequest.sendRequest(&myHttpResponseCB, req, param);	
 					myHttpRequest.sendRequest(req, param);	
 					switchState(FSM_WAITING_FOR_IDENTIFICATION);	
-				}	
+				}
+				
 				break;
+
 
 				case FSM_WAITING_FOR_IDENTIFICATION:
 					if(myNewState){
@@ -132,17 +150,29 @@ void *SupplyTask::runThread(void *arg)
 						myNewState = false;
 					}	
 					if(myHttpRequestFailed){
-						switchState(FSM_END);
-						mySupplyFailedCB->invoke("Http server failed\0");
+						myHttpRequestFailed = false;
+						myOperatorsName = string("Guy");
+						switchState(FSM_GIVING_INFORMATIONS);
+						
+						//if(attemptFailed++ > MAX_ATTEMPTS_FAILED){
+						//	ArLog::log(ArLog::Normal,"%d attempts failed",attemptFailed);
+						//	//mySupplyFailedCB->invoke("Http server failed\0");
+						//	myOperatorsName = string("Guy");
+						//	switchState(FSM_GIVING_INFORMATIONS);
+						//
+						//}
+						//else{
+						//	ArLog::log(ArLog::Normal,"Attempt %d failed, retry.",attemptFailed);
+						//	switchState(FSM_IDENTIFICATION);
+						//}	
 						break;
 					}
 
-					if(!myHttpNewResponse)
-						break;
-					if(myHttpResponse == NULL)
-						break;
-					if(strcmp(myHttpResponse,""))
-					{
+					if(myHttpNewResponse){
+						myHttpNewResponse = false;
+
+					
+						//It seems to be a valid response from server
 						try{	
 							boost::property_tree::ptree pt = JSONParser::parse(myHttpResponse);		
 							myOperatorsName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("firstname").c_str()));						
@@ -155,32 +185,45 @@ void *SupplyTask::runThread(void *arg)
 						catch(std::exception const&  ex){
 							myHttpResponse = NULL;
 							printf("JSON Error. %s", ex.what());
+							ArLog::log(ArLog::Normal,"Unable to read JSON content");
+								
+							myOperatorsName = string("Guy");			
 						}
 							
-						myHttpResponse = NULL;
+						//myHttpResponse = NULL;
 						switchState(FSM_GIVING_INFORMATIONS);
 					}
+					
 					break;
 				case FSM_GIVING_INFORMATIONS:
 					if(myNewState){
 						ArLog::log(ArLog::Normal,"State FSM_GIVING_INFORMATIONS");
 						myNewState = false;
+						myCardReader.open();
+						myCardReader.runAsync();
+						myNewState = false;
+						//Cepstral : "In formation + Use your badge to teminate"
 					}
 					switchState(FSM_WAITING_FOR_HUMAN_TO_END);
 
 					break;
 				case FSM_WAITING_FOR_HUMAN_TO_END:
 					if(myNewState){
-						ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_HUMAN_TO_END");
-						myCardReader.open();
-						myCardReader.runAsync();
+						ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_HUMAN_TO_END");	
 						myNewState = false;
 					}
 					if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
-						myCardReader.stopRunning();
-						myCardReader.close();
-						mySupplyFailedCB->invoke("Human forgot me\0");
-						switchState(FSM_END);
+						if(attemptFailed++ > MAX_ATTEMPTS_FAILED){
+							myCardReader.stopRunning();
+							myCardReader.close();
+							strcpy(errorMessage,"Human forgot me\0");
+							switchState(FSM_FAILED);
+							
+						}
+						else{
+							//Cepstral : "Are you still here"
+							switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+						}
 						break;
 					}
 					
@@ -189,7 +232,7 @@ void *SupplyTask::runThread(void *arg)
 						myNewCardRead = false;
 						myCardReader.stopRunning();
 						myCardReader.close();
-						mySupplyDoneCB->invoke(myCardRead);
+						//mySupplyDoneCB->invoke(myCardRead);
 						switchState(FSM_END);	
 					}
 					break;
@@ -199,6 +242,15 @@ void *SupplyTask::runThread(void *arg)
 					ArLog::log(ArLog::Normal,"State FSM_END");
 					//Say ByeBye
 					myRunning = false;
+					char res[64];
+					sprintf(res,"Done by %s",myCardRead);
+					mySupplyDoneCB->invoke(res);
+					break;
+				case FSM_FAILED:
+					ArLog::log(ArLog::Normal,"State FSM_END");
+					//Say ByeBye
+					myRunning = false;
+					mySupplyFailedCB->invoke(errorMessage);
 					break;
 			}
 		ArUtil::sleep(100);

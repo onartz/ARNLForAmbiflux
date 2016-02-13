@@ -15,6 +15,7 @@
 #include "ArLocalizationTask.h"
 #include "ArDocking.h"
 #include "ArLog.h"
+//#include "sqlite3.h"
 
 
 
@@ -51,6 +52,36 @@ int main(int argc, char **argv)
   // Initialize Aria and Arnl global information
   Aria::init();
   Arnl::init();
+
+//sqlite3 *db;
+//   char *zErrMsg = 0;
+//   int  rc;
+//   char *sql;
+//
+//   /* Open database */
+//   rc = sqlite3_open("patrolbot.db", &db);
+//   if( rc ){
+//      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+//      exit(0);
+//   }else{
+//      fprintf(stdout, "Opened database successfully\n");
+//   }
+//    /* Create SQL statement */
+//   sql = "CREATE TABLE USER("  \
+//         "ID CARDID PRIMARY KEY     NOT NULL," \
+//         "NAME           TEXT    NOT NULL\")";
+//         
+//
+//   /* Execute SQL statement */
+//   rc = sqlite3_exec(db, sql, NULL, 0, &zErrMsg);
+//   if( rc != SQLITE_OK ){
+//   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+//      sqlite3_free(zErrMsg);
+//   }else{
+//      fprintf(stdout, "Table created successfully\n");
+//   }
+//   sqlite3_close(db);
+//
 
 
 

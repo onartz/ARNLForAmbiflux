@@ -13,17 +13,20 @@
 //#include "ArCepstral.h"
 
 #define TIMEOUT_ATTENTE_HUMAIN 10
-#define TIMEOUT_ATTENTE_SERVER 3
+//#define TIMEOUT_ATTENTE_SERVER 3
+#define MAX_ATTEMPTS_FAILED 3
 
 class SupplyTask : public ArASyncTask{
 public :
 	enum State {
 		FSM_START,
 		FSM_WAITING_FOR_HUMAN_TO_START,
+		FSM_IDENTIFICATION,
 		FSM_WAITING_FOR_IDENTIFICATION,
 		FSM_GIVING_INFORMATIONS,
 		FSM_WAITING_FOR_HUMAN_TO_END,
-		FSM_END
+		FSM_END,
+		FSM_FAILED
   };
 	SupplyTask();
 	SupplyTask(const char *);
@@ -81,7 +84,10 @@ protected:
 	ArSoundsQueue soundQueue;
 
 	std::string myOperatorsName;
+	//Number of Attempt  to initiate communication with human
+	int attemptFailed;
 	//ArCepstral myCepstral;
+	char errorMessage[64];
 
 	
 
