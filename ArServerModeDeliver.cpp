@@ -25,49 +25,50 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 */
 #include "Aria.h"
 #include "ArExport.h"
-#include "ArServerModeSupply.h"
+#include "ArServerModeDeliver.h"
 
-AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server, 
+AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server, 
 					    ArRobot *robot,
 					    bool defunct) : 
-  ArServerMode(robot, server, "supply"),
+  ArServerMode(robot, server, "deliver"),
   myStopGroup(robot),
-  myNetSupplyCB(this, &ArServerModeSupply::netSupply),
-  mySupplyDoneCB(this,&ArServerModeSupply::handleSupplyDone),
-  mySupplyFailedCB(this,&ArServerModeSupply::handleSupplyFailed)
+  myNetDeliverCB(this, &ArServerModeDeliver::netDeliver),
+  myDeliverDoneCB(this,&ArServerModeDeliver::handleDeliverDone),
+  myDeliverFailedCB(this,&ArServerModeDeliver::handleDeliverFailed)
  
 {
-  myMode = "Supply";
+  myMode = "Deliver";
   
   if (myServer != NULL)
   {
-    addModeData("supply", "supply the robot", &myNetSupplyCB,
-		"string: content", "none", "Supply", "RETURN_NONE");
-	myASyncSupplyTask.setSupplyDoneCB(&mySupplyDoneCB);
-	myASyncSupplyTask.setSupplyFailedCB(&mySupplyFailedCB);
-	//myServer->addData("supplyInfos","Supply informations",
-	//myServer->addData("supplyInfos",......
+    addModeData("deliver", "deliver the robot", &myNetDeliverCB,
+		"string: content", "none", "Deliver", "RETURN_NONE");
+	myASyncDeliverTask.setDeliverDoneCB(&myDeliverDoneCB);
+	myASyncDeliverTask.setDeliverFailedCB(&myDeliverFailedCB);
+	
+	//myServer->addData("deliverInfos","Deliver informations",
+	//myServer->addData("deliverInfos",......
 
   }
 }
 
-AREXPORT ArServerModeSupply::~ArServerModeSupply()
+AREXPORT ArServerModeDeliver::~ArServerModeDeliver()
 {
 }
 
-void ArServerModeSupply::handleSupplyDone(char * res){
-	myStatus = "Supply done by " + string(res);
+void ArServerModeDeliver::handleDeliverDone(char * res){
+	myStatus = "Deliver done by " + string(res);
 	ArLog::log(ArLog::Normal, myStatus.c_str());
 }
 
-void ArServerModeSupply::handleSupplyFailed(char * res){
+void ArServerModeDeliver::handleDeliverFailed(char * res){
 	
-	myStatus = "Supply failed : " + string(res);
+	myStatus = "Deliver failed : " + string(res);
 	ArLog::log(ArLog::Normal, myStatus.c_str());
 }
 
 
-AREXPORT void ArServerModeSupply::activate(void)
+AREXPORT void ArServerModeDeliver::activate(void)
 {
 	//Modif ON
  if (isActive() || !baseActivate())
@@ -75,53 +76,54 @@ AREXPORT void ArServerModeSupply::activate(void)
 
  /*if (!baseActivate())
     return;*/
+  
   setActivityTimeToNow();
-  //myStatus = "Starting supply operation";
-  supplyTask();
+  //myStatus = "Starting deliver operation";
+  deliverTask();
 }
 
-AREXPORT void ArServerModeSupply::deactivate(void)
+AREXPORT void ArServerModeDeliver::deactivate(void)
 {
-	if(myASyncSupplyTask.getRunning())
-		myASyncSupplyTask.stopRunning();
+	if(myASyncDeliverTask.getRunning())
+		myASyncDeliverTask.stopRunning();
   myStopGroup.deactivate();
   baseDeactivate();
 }
 
 
-AREXPORT void ArServerModeSupply::netSupply(ArServerClient *client, 
+AREXPORT void ArServerModeDeliver::netDeliver(ArServerClient *client, 
 				     ArNetPacket *packet)
 {
    char buf[512];
 	packet->bufToStr(buf, sizeof(buf)-1);
-	//ArLog::log(ArLog::Normal, "Supply content %s", buf);
+	//ArLog::log(ArLog::Normal, "Deliver content %s", buf);
     //myRobot->lock();
-   supply(buf);
+   deliver(buf);
 }
 
-AREXPORT void ArServerModeSupply::supply(const char *content)
+AREXPORT void ArServerModeDeliver::deliver(const char *content)
 {
   //reset();
   myContent = content;
-  myMode = "Supply";
-  myStatus = "Starting supply";
-  myASyncSupplyTask.init(content);
+  myMode = "Deliver";
+  myStatus = "Starting deliver";
+  myASyncDeliverTask.init(content);
   this->lockMode();
   activate();
 }
 
 
-AREXPORT void ArServerModeSupply::userTask(void)
+AREXPORT void ArServerModeDeliver::userTask(void)
 {
- //ArLog::log(ArLog::Normal,"UserTask");
+ 
 }
 
-AREXPORT void ArServerModeSupply::addToConfig(ArConfig *config, 
+AREXPORT void ArServerModeDeliver::addToConfig(ArConfig *config, 
 					      const char *section)
 {
 }
 
-AREXPORT void ArServerModeSupply::setUseLocationDependentDevices(
+AREXPORT void ArServerModeDeliver::setUseLocationDependentDevices(
 	bool useLocationDependentDevices, bool internal)
 {
   if (!internal)
@@ -145,16 +147,16 @@ AREXPORT void ArServerModeSupply::setUseLocationDependentDevices(
     myRobot->unlock();
 }
 
-AREXPORT bool ArServerModeSupply::getUseLocationDependentDevices(void)
+AREXPORT bool ArServerModeDeliver::getUseLocationDependentDevices(void)
 {
   return myUseLocationDependentDevices;
 }
 
 
 
-void ArServerModeSupply::supplyTask(){
+void ArServerModeDeliver::deliverTask(){
 	
-	printf("Supply task started with content : %s",myContent);
-	myASyncSupplyTask.runAsync();
+	printf("Deliver task started with content : %s",myContent);
+	myASyncDeliverTask.runAsync();
 	
 }

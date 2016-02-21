@@ -4,17 +4,16 @@
  The robot should be able to respond to Supply, deliver, talk commands...
 */
 
-#include <time.h>
-#include <stdio.h>
-#include <assert.h>
+
 #include "Aria.h"
 #include "ArNetworking.h"
 #include "Arnl.h"
 #include "ArServerModeSupply.h"
-
+#include "ArServerModeDeliver.h"
 #include "ArLocalizationTask.h"
 #include "ArDocking.h"
-#include "ArLog.h"
+//#include "ArLog.h"
+#include "ArServerMyMode.h"
 //#include "sqlite3.h"
 
 
@@ -509,6 +508,11 @@ int main(int argc, char **argv)
 			    locTask.getRobotHome(),
 			    locTask.getRobotHomeCallback());
 
+   // Mode To go to a goal or other specific point:
+  ArServerMyMode myMode(&server, &robot,&locTask, &pathTask, &map, 300, 300);
+ 
+
+
 
   // Mode To stop and remain stopped:
   ArServerModeStop modeStop(&server, &robot);
@@ -579,11 +583,12 @@ int main(int argc, char **argv)
           new ArGlobalRetFunctor1<const char*, ArRobot*>(&getGyroStatusString, &robot)
       );
   }
-
   
-  ArServerModeSupply modeSupply(&server, &robot);
+  //ArServerModeSupply modeSupply(&server, &robot);
   //modeSupply
 
+   //ArServerModeDeliver modeDeliver(&server, &robot);
+  
   // Setup the dock if there is a docking system on board.
   ArServerModeDock *modeDock = NULL;
   modeDock = ArServerModeDock::createDock(&server, &robot, &locTask, 
@@ -595,7 +600,6 @@ int main(int argc, char **argv)
     modeDock->addToConfig(Aria::getConfig());
     modeDock->addControlCommands(&commands);
   }
-
 
 
   // Make Stop mode the default (If current mode deactivates without entering
