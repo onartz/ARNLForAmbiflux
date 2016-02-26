@@ -4,7 +4,10 @@
  The robot should be able to respond to Supply, deliver, talk commands...
 */
 
-
+#include <vector>
+#include <time.h>
+#include <stdio.h>
+#include <assert.h>
 #include "Aria.h"
 #include "ArNetworking.h"
 #include "Arnl.h"
@@ -14,7 +17,9 @@
 #include "ArDocking.h"
 //#include "ArLog.h"
 #include "ArServerMyMode.h"
+#include "Globals.h"
 //#include "sqlite3.h"
+
 
 
 
@@ -43,7 +48,7 @@ const char* getGyroStatusString(ArRobot* robot)
   return "OK";
 }
 
-
+  ArCepstral g_Cepstral;
 
 int main(int argc, char **argv)
 {
@@ -51,6 +56,8 @@ int main(int argc, char **argv)
   // Initialize Aria and Arnl global information
   Aria::init();
   Arnl::init();
+
+
 
 //sqlite3 *db;
 //   char *zErrMsg = 0;
@@ -82,6 +89,14 @@ int main(int argc, char **argv)
 //   sqlite3_close(db);
 //
 
+
+if(!(g_Cepstral.init())){
+		ArLog::log(ArLog::Normal,"Cepstral failed");
+	}
+
+else{
+	g_Cepstral.speakf("Hello");
+}
 
 
   // The robot object
@@ -584,10 +599,10 @@ int main(int argc, char **argv)
       );
   }
   
-  //ArServerModeSupply modeSupply(&server, &robot);
+  ArServerModeSupply modeSupply(&server, &robot);
   //modeSupply
 
-   //ArServerModeDeliver modeDeliver(&server, &robot);
+   ArServerModeDeliver modeDeliver(&server, &robot);
   
   // Setup the dock if there is a docking system on board.
   ArServerModeDock *modeDock = NULL;

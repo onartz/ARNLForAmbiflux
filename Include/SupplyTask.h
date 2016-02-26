@@ -10,14 +10,21 @@
 #include "ArSoundPlayer.h"
 #include "JSONParser.h"
 #include "DALRest.h"
-//#include "ArCepstral.h"
+#include "Globals.h"
 
-#define TIMEOUT_ATTENTE_HUMAIN 10
-//#define TIMEOUT_ATTENTE_SERVER 3
-#define MAX_ATTEMPTS_FAILED 3
+#ifndef TIMEOUT_ATTENTE_HUMAIN
+	#define TIMEOUT_ATTENTE_HUMAIN 30
+#endif
+#ifndef MAX_ATTEMPTS_FAILED
+	#define MAX_ATTEMPTS_FAILED 3
+#endif
+
+
 
 class SupplyTask : public ArASyncTask{
 public :
+
+	//ArCepstral myCepstral;
 	enum State {
 		FSM_START,
 		FSM_WAITING_FOR_HUMAN_TO_START,
@@ -86,7 +93,7 @@ protected:
 	std::string myOperatorsName;
 	//Number of Attempt  to initiate communication with human
 	int attemptFailed;
-	//ArCepstral myCepstral;
+	
 	char errorMessage[64];
 
 	

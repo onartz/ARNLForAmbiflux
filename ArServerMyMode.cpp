@@ -159,7 +159,7 @@ AREXPORT void ArServerMyMode::userTask(){
 		if (myHitDock)
 		{
 			ArLog::log(ArLog::Normal, "DockedTo");		  
-			myStatus = "DockedTo";
+			//myStatus = "DockedTo";
 			switchState(DOCKED);
 		}
 		// if we sent the command but it didn't work
@@ -180,6 +180,7 @@ AREXPORT void ArServerMyMode::userTask(){
 		{
 			ArLog::log(ArLog::Normal, "Hit dock");
 			myHitDock = true;
+			myStatus = "DockedTo";
 			//myHitDockTime.setToNow();
 			switchState(DOCKED);
 			myDriveTo.deactivate();

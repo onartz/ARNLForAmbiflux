@@ -1,5 +1,7 @@
 #include "SupplyTask.h"
 
+
+
 SupplyTask::SupplyTask():myState(FSM_START),
 myRunning(true),
 myCardReadCB(this, &SupplyTask::handleCardRead),
@@ -14,10 +16,7 @@ myHttpResponse(NULL)
 	soundQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
 	soundQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
 
-	//soundQueue.runAsync();
-	/*if(!(myCepstral.init())){
-		ArLog::log(ArLog::Normal,"Cepstral failed");
-	}*/
+
   
 }
 
@@ -92,6 +91,7 @@ void *SupplyTask::runThread(void *arg)
 			case FSM_START:
 				//Let's sound something or call using playSound
 				ArLog::log(ArLog::Normal,"State FSM_START");
+				g_Cepstral.speakf("State FSM_START");
 				//ArLog::log(ArLog::Normal,"Content : %s",myContent);
 				soundQueue.play("c:\\temp\\ShortCircuit.wav");	
 				switchState(FSM_WAITING_FOR_HUMAN_TO_START);

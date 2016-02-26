@@ -27,6 +27,7 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "ArExport.h"
 #include "ArServerModeSupply.h"
 
+
 AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server, 
 					    ArRobot *robot,
 					    bool defunct) : 

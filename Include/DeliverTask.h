@@ -12,11 +12,16 @@
 #include "DALRest.h"
 //#include "ArCepstral.h"
 
-#define TIMEOUT_ATTENTE_HUMAIN 10
-#define MAX_ATTEMPTS_FAILED 3
+#ifndef TIMEOUT_ATTENTE_HUMAIN
+	#define TIMEOUT_ATTENTE_HUMAIN 30
+#endif
+#ifndef MAX_ATTEMPTS_FAILED
+	#define MAX_ATTEMPTS_FAILED 3
+#endif
 
 class DeliverTask : public ArASyncTask{
 public :
+
 	enum State {
 		FSM_START,
 		FSM_WAITING_FOR_HUMAN_TO_START,
