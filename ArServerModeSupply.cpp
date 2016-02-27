@@ -26,6 +26,9 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "Aria.h"
 #include "ArExport.h"
 #include "ArServerModeSupply.h"
+#include <boost/algorithm/string/replace.hpp>
+
+
 
 
 AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server, 
@@ -103,12 +106,14 @@ AREXPORT void ArServerModeSupply::netSupply(ArServerClient *client,
 AREXPORT void ArServerModeSupply::supply(const char *content)
 {
   //reset();
-  myContent = content;
-  myMode = "Supply";
-  myStatus = "Starting supply";
-  myASyncSupplyTask.init(content);
-  this->lockMode();
-  activate();
+	std::string strContent(content);
+	boost::algorithm::replace_all(strContent, "_", " ");
+	myContent = strContent.c_str();
+	myMode = "Supply";
+	myStatus = "Starting supply";
+	myASyncSupplyTask.init(content);
+	this->lockMode();
+	activate();
 }
 
 
