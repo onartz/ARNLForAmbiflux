@@ -28,30 +28,35 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "ArServerModeSupply.h"
 #include <boost/algorithm/string/replace.hpp>
 
-
-
-
 AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server, 
 					    ArRobot *robot,
 					    bool defunct) : 
   ArServerMode(robot, server, "supply"),
   myStopGroup(robot),
   myNetSupplyCB(this, &ArServerModeSupply::netSupply),
-  mySupplyDoneCB(this,&ArServerModeSupply::handleSupplyDone),
-  mySupplyFailedCB(this,&ArServerModeSupply::handleSupplyFailed)
- 
+  myCardReadCB(this, &ArServerModeSupply::handleCardRead),
+	myHttpResponseCB(this, &ArServerModeSupply::handleHttpResponse),
+	myHttpFailedCB(this, &ArServerModeSupply::handleHttpFailed),
+	myCardReader(&myCardReadCB),
+	myHttpRequest(&myHttpResponseCB, &myHttpFailedCB),
+	myHttpResponse(NULL),
+	myCardRead(NULL)	
 {
   myMode = "Supply";
-  
+
   if (myServer != NULL)
   {
     addModeData("supply", "supply the robot", &myNetSupplyCB,
 		"string: content", "none", "Supply", "RETURN_NONE");
-	myASyncSupplyTask.setSupplyDoneCB(&mySupplyDoneCB);
-	myASyncSupplyTask.setSupplyFailedCB(&mySupplyFailedCB);
-	//myServer->addData("supplyInfos","Supply informations",
-	//myServer->addData("supplyInfos",......
-
+	
+	myNewCardRead = false;
+	myHttpNewResponse = false;
+	myHttpRequestFailed = false;
+	myNewState = true;
+	myOperatorsName = "";
+	attemptFailed = 0;
+	strcpy(errorMessage, "No error\0");
+	myDone = false;
   }
 }
 
@@ -59,35 +64,63 @@ AREXPORT ArServerModeSupply::~ArServerModeSupply()
 {
 }
 
-void ArServerModeSupply::handleSupplyDone(char * res){
-	myStatus = "Supply done by " + string(res);
-	ArLog::log(ArLog::Normal, myStatus.c_str());
+//Triggered when card has been read
+void ArServerModeSupply::handleCardRead(char * cardID){
+	myNewCardRead = true;
+    myCardRead = cardID;
 }
 
-void ArServerModeSupply::handleSupplyFailed(char * res){
-	
-	myStatus = "Supply failed : " + string(res);
-	ArLog::log(ArLog::Normal, myStatus.c_str());
+void ArServerModeSupply::handleHttpResponse(char * response){
+	myHttpNewResponse = true;
+	myHttpResponse = response;
+}
+
+void ArServerModeSupply::handleHttpFailed(){
+	ArLog::log(ArLog::Normal,"Http request failed");
+	strcpy(errorMessage,"Http request failed\0");
+	myHttpRequestFailed = true;
+}
+
+void ArServerModeSupply::switchState(State state)
+{
+  State oldState = myState;
+  myState = state;
+  myNewState = true;
+  myStartedState.setToNow();
+  
+  stateChanged();
+}
+
+void ArServerModeSupply::stateChanged(void)
+{
+	//g_SoundsQueue.play("c:\\temp\\ShortCircuit.wav");
+	if((myLastState !=  myState) && myState == FSM_WAITING_FOR_HUMAN_TO_START)
+		myStatus = "Waiting";
+	if((myLastState !=  myState) && myState == FSM_SEND_IDENTIFICATION_REQ)
+		myStatus = "Identifying";
+	if((myLastState !=  myState) && myState == FSM_INFORM_FOR_SUPPLY)
+		myStatus = "Supplying";
+	if(myState == FSM_OK)
+		myStatus = "Done  by " + std::string(myCardRead);
+	if(myState == FSM_FAILED)
+		myStatus = "Failed because " + std::string(errorMessage);
+  myLastState = myState;
+  
+  
 }
 
 
 AREXPORT void ArServerModeSupply::activate(void)
 {
-	//Modif ON
- if (isActive() || !baseActivate())
+ if (!baseActivate())
     return;
 
- /*if (!baseActivate())
-    return;*/
   setActivityTimeToNow();
-  //myStatus = "Starting supply operation";
   supplyTask();
 }
 
 AREXPORT void ArServerModeSupply::deactivate(void)
 {
-	if(myASyncSupplyTask.getRunning())
-		myASyncSupplyTask.stopRunning();
   myStopGroup.deactivate();
   baseDeactivate();
 }
@@ -105,21 +138,185 @@ AREXPORT void ArServerModeSupply::netSupply(ArServerClient *client,
 
 AREXPORT void ArServerModeSupply::supply(const char *content)
 {
-  //reset();
 	std::string strContent(content);
 	boost::algorithm::replace_all(strContent, "_", " ");
 	myContent = strContent.c_str();
 	myMode = "Supply";
 	myStatus = "Starting supply";
-	myASyncSupplyTask.init(content);
-	this->lockMode();
+	//this->lockMode();
 	activate();
 }
 
 
 AREXPORT void ArServerModeSupply::userTask(void)
 {
- //ArLog::log(ArLog::Normal,"UserTask");
+	if(!myDone)
+	{
+		switch(myState){
+			case FSM_START:
+				//Let's sound something or call using playSound
+				ArLog::log(ArLog::Normal,"State FSM_START");
+				myNewCardRead = false;
+				myHttpNewResponse = false;
+				myHttpRequestFailed = false;
+				myNewState = true;
+				myOperatorsName = "";
+				//attemptFailed = 0;
+				strcpy(errorMessage, "No error\0");
+				//g_Cepstral.speakf("State FSM_START");
+				//ArLog::log(ArLog::Normal,"Content : %s",myContent);
+				//soundQueue.play("c:\\temp\\ShortCircuit.wav");	
+				switchState(FSM_WAITING_FOR_HUMAN_TO_START);
+				break;
+			case FSM_WAITING_FOR_HUMAN_TO_START:
+				if(myNewState){
+					ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_START");
+					myCardReader.open();
+					myCardReader.runAsync();
+					myNewState = false;
+					myStatus = "Waiting";
+				}
+				if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
+					if(attemptFailed++ >= MAX_ATTEMPTS_FAILED){
+						myCardReader.stopRunning();
+						myCardReader.close();
+						strcpy(errorMessage,"Human not present\0");
+						switchState(FSM_FAILED);
+						
+					}
+					else{
+						switchState(FSM_START);
+					}
+					break;
+				}
+				//New card detected
+				if(myNewCardRead){
+					myNewCardRead = false;
+					myCardReader.stopRunning();
+					myCardReader.close();
+					switchState(FSM_SEND_IDENTIFICATION_REQ);		
+				}	
+				break;
+
+			case FSM_SEND_IDENTIFICATION_REQ:
+				if(myNewState){
+					ArLog::log(ArLog::Normal,"State FSM_IDENTIFICATION");
+					//attemptFailed = 0;
+					myNewState = false;
+					//Identify Card Owner	
+					std::string req("employeeByCardId");
+					std::string param(myCardRead);
+							
+					//Send http request to REST Server
+					//myHttpRequest.sendRequest(&myHttpResponseCB, req, param);	
+					myHttpRequest.sendRequest(req, param);	
+					//switchState(FSM_WAITING_FOR_IDENTIFICATION);
+					break;
+				}
+				if(myHttpRequestFailed){
+					myHttpRequestFailed = false;
+					myOperatorsName = string("Guy");
+					switchState(FSM_INFORM_FOR_SUPPLY);		
+					break;
+				}
+				else if(myHttpNewResponse){
+						myHttpNewResponse = false;
+
+						//It seems to be a valid response from server
+						try{	
+							boost::property_tree::ptree pt = JSONParser::parse(myHttpResponse);		
+							myOperatorsName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("firstname").c_str()));						
+							//printf("Operators name : %s",myOperatorsName.c_str());
+
+							//lastName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("lastname").c_str()));
+							//cardId = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("cardID").c_str()));
+							//emailAddress = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("emailAddress").c_str()));	
+							}
+						catch(std::exception const&  ex){
+							myHttpResponse = NULL;
+							printf("JSON Error. %s", ex.what());
+							ArLog::log(ArLog::Normal,"Unable to read JSON content");
+								
+							myOperatorsName = string("Guy");			
+						}
+							
+						//myHttpResponse = NULL;
+						switchState(FSM_INFORM_FOR_SUPPLY);
+					}
+				
+				break;
+			
+				case FSM_INFORM_FOR_SUPPLY:
+					if(myNewState){
+						ArLog::log(ArLog::Normal,"State FSM_INFORM_FOR_SUPPLY");
+						myNewState = false;
+						myCardReader.open();
+						myCardReader.runAsync();
+						myNewState = false;
+						break;
+						//Cepstral : "In formation + Use your badge to teminate"
+					}
+
+					switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+
+					break;
+				case FSM_WAITING_FOR_HUMAN_TO_END:
+					if(myNewState){
+						ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_HUMAN_TO_END");	
+						myNewState = false;
+					}
+					if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
+						if(attemptFailed++ >= MAX_ATTEMPTS_FAILED){
+							myCardReader.stopRunning();
+							myCardReader.close();
+							strcpy(errorMessage,"Human forgot me\0");
+							switchState(FSM_FAILED);
+							
+						}
+						else{
+							//Cepstral : "Are you still here"
+							switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+						}
+						break;
+					}
+					
+					//New card detected
+					if(myNewCardRead){
+						myNewCardRead = false;
+						myCardReader.stopRunning();
+						myCardReader.close();
+						//mySupplyDoneCB->invoke(myCardRead);
+						switchState(FSM_OK);	
+					}
+					break;
+
+
+				case FSM_OK:
+					ArLog::log(ArLog::Normal,"State FSM_END");
+					
+					
+					myDone = true;
+					//Say ByeBye
+					//TODO : signaler la fin
+					//myRunning = false;
+					//char res[64];
+					//sprintf(res,"Done by %s",myCardRead);
+					//mySupplyDoneCB->invoke(res);
+					break;
+				case FSM_FAILED:
+					ArLog::log(ArLog::Normal,"State FSM_FAILED");
+					myStatus = "Failed";
+					
+					myDone = true;
+					//Say ByeBye
+					//TODO : signaler la fin
+					//myRunning = false;
+					//mySupplyFailedCB->invoke(errorMessage);
+					break;
+				default:
+					break;
+				}
+		}
 }
 
 AREXPORT void ArServerModeSupply::addToConfig(ArConfig *config, 
@@ -127,40 +324,12 @@ AREXPORT void ArServerModeSupply::addToConfig(ArConfig *config,
 {
 }
 
-AREXPORT void ArServerModeSupply::setUseLocationDependentDevices(
-	bool useLocationDependentDevices, bool internal)
-{
-  if (!internal)
-    myRobot->lock();
-  // if this is a change then print it
-  if (useLocationDependentDevices != myUseLocationDependentDevices)
-  {
-    myUseLocationDependentDevices = useLocationDependentDevices;
-    myLimiterForward->setUseLocationDependentDevices(
-	    myUseLocationDependentDevices);
-    myLimiterBackward->setUseLocationDependentDevices(
-	    myUseLocationDependentDevices);
-    if (myLimiterLateralLeft != NULL)
-      myLimiterLateralLeft->setUseLocationDependentDevices(
-	      myUseLocationDependentDevices);
-    if (myLimiterLateralRight != NULL)
-      myLimiterLateralRight->setUseLocationDependentDevices(
-	      myUseLocationDependentDevices);
-  }
-  if (!internal)
-    myRobot->unlock();
-}
-
-AREXPORT bool ArServerModeSupply::getUseLocationDependentDevices(void)
-{
-  return myUseLocationDependentDevices;
-}
-
 
 
 void ArServerModeSupply::supplyTask(){
 	
-	printf("Supply task started with content : %s",myContent);
-	myASyncSupplyTask.runAsync();
+	printf("User task started with content : %s",myContent);
+	myDone = false;
+	switchState(FSM_START);
 	
 }

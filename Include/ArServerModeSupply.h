@@ -32,12 +32,23 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "SupplyTask.h"
 
 /*
-Mode in which the robot has to be supplied by an operator.
+Mode in which the robot has to be supplied by an human operator.
 */
 
 class ArServerModeSupply : public ArServerMode
 {
 public:
+	//ArCepstral myCepstral;
+	enum State {
+		FSM_START,
+		FSM_WAITING_FOR_HUMAN_TO_START,
+		FSM_SEND_IDENTIFICATION_REQ,
+		FSM_INFORM_FOR_SUPPLY,
+		FSM_WAITING_FOR_HUMAN_TO_END,
+		FSM_OK,
+		FSM_FAILED,
+		FSM_OTHER
+  };
   AREXPORT ArServerModeSupply(ArServerBase *server, ArRobot *robot, 
 			    bool defunct = false);
   AREXPORT virtual ~ArServerModeSupply();
@@ -49,38 +60,72 @@ public:
   AREXPORT void handleSupplyFailed(char *);
   AREXPORT virtual void userTask(void);
   AREXPORT virtual void checkDefault(void) { activate(); }
+  
   AREXPORT virtual ArActionGroup *getActionGroup(void) { return &myStopGroup; }
   /// Adds to the config
   AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
   /// Sets whether we're using the range devices that depend on location
-  AREXPORT void setUseLocationDependentDevices(
-	  bool useLocationDependentDevices, bool internal = false);
+ // AREXPORT void setUseLocationDependentDevices(
+	 //bool useLocationDependentDevices, bool internal = false);
   /// Gets whether we're using the range devices that depend on location
-  AREXPORT bool getUseLocationDependentDevices(void);
-  //funtion triggered when new card read
-  //void readCardCB(int *);
+  //AREXPORT bool getUseLocationDependentDevices(void);
    
 
 protected:
-  ArActionDeceleratingLimiter *myLimiterForward;
-  ArActionDeceleratingLimiter *myLimiterBackward;
-  ArActionDeceleratingLimiter *myLimiterLateralLeft;
-  ArActionDeceleratingLimiter *myLimiterLateralRight;
-  ArActionGroupStop myStopGroup;
-  bool myUseLocationDependentDevices;
-  ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
-  //ArFunctor2C<ArServerModeDock, ArServerClient *, ArNetPacket *> myServerGetSupplyInformationsCB;
+	ArActionDeceleratingLimiter *myLimiterForward;
+	ArActionDeceleratingLimiter *myLimiterBackward;
+	ArActionDeceleratingLimiter *myLimiterLateralLeft;
+	ArActionDeceleratingLimiter *myLimiterLateralRight;
+	ArActionGroupStop myStopGroup;
+	bool myUseLocationDependentDevices;
+	ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
+	/// Change internal state of FSM
+	void switchState(State state);
+	/// Called a new card has been read by cardREader
+	void handleCardRead(char * cardID);
+	//Called when a valid http response comes from REST server
+	void handleHttpResponse(char * response);
+	void handleHttpFailed(void);
+	
+	/// 
+	void supplyTask();
+ 
+	void stateChanged(void);
+	/// Checked if the current operation is ended (done or failed)
+	bool myDone;
+	
+	/// The content to be spupply to the robot
+	const char * myContent;
+	//A new card has been read
+	bool myNewCardRead;
+	//Card ID
+	char * myCardRead;
+	/// Set when a new Http response comes from REST server. Reset when read.
+	bool myHttpNewResponse;
+	/// Content of the response
+	char * myHttpResponse;
+	/// Set when Http request failed. Reset when read.
+	bool myHttpRequestFailed;
+	// The card reader
+	LecteurCarteTask myCardReader;
 
-  //Functors passed to a class
-  ArFunctor1C<ArServerModeSupply, char*> mySupplyDoneCB;
-  ArFunctor1C<ArServerModeSupply, char*> mySupplyFailedCB;
-  
-  
-  //ArFunctor1C<ArServerModeSupply, int> functor1
-  const char * myContent;
-  void supplyTask();
-  
-  SupplyTask myASyncSupplyTask;
+	State myState;
+	State myLastState;
+	bool myNewState;
+	ArTime myStartedState;
+
+	ArFunctor1C<ArServerModeSupply, char *> myCardReadCB;
+	ArFunctor1C<ArServerModeSupply, char *> myHttpResponseCB;
+	ArFunctorC<ArServerModeSupply> myHttpFailedCB;
+
+	DALRest myHttpRequest;
+	//ArSoundsQueue soundQueue;
+
+	std::string myOperatorsName;
+	//Number of Attempt  to initiate communication with human
+	int attemptFailed;
+	
+	char errorMessage[64];
  
 };
 

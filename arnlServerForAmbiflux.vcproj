@@ -6,6 +6,7 @@
 	ProjectGUID="{16E15970-E0B1-43D7-91A0-9037603E2F0A}"
 	RootNamespace="arnlServer"
 	Keyword="ManagedCProj"
+	AssemblyReferenceSearchPaths="&quot;..\..\..\..\..\sqlite&quot;"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -18,7 +19,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="../../bin"
+			OutputDirectory="C:\Program Files\MobileRobots\Aria\bin"
 			IntermediateDirectory="obj/$(ConfigurationName)-VC9"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -43,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\MobileRobots\ARNL\include\Arnetworking&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\Aria&quot;;.\include;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internallibs\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\include&quot;;&quot;C:\Program Files\MobileRobots\Arnl\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\include&quot;;C:\Temp\boost_1_54_0\boost_1_54_0"
+				AdditionalIncludeDirectories="&quot;c:\Program Files\MobileRobots\ARNL\include&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\Aria&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\Arnetworking&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\include&quot;;.\include;c:\sqlite\include;C:\Temp\boost_1_54_0\boost_1_54_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;ARIADLL_EXPORTS"
 				StringPooling="false"
 				MinimalRebuild="false"
@@ -67,11 +68,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib ArSpeechSynth_Cepstral_Debug_VC9.lib SpringProx.lib $(NOINHERIT)"
+				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib ArSpeechSynth_Cepstral_Static_Debug.lib Sqlite3.lib SpringProx.lib $(NOINHERIT)"
 				OutputFile="$(OutDir)\$(ProjectName)DebugVC9.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\MobileRobots\ARNL\bin&quot;;.\lib;&quot;C:\Program Files\MobileRobots\Aria\bin&quot;;&quot;C:\Program Files\MobileRobots\ARNL\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internalLibs\lib&quot;"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\MobileRobots\ARNL\bin&quot;;&quot;C:\Program Files\MobileRobots\ARNL\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internalLibs\lib&quot;;c:\sqlite\lib;.\lib"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
@@ -127,7 +128,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\MobileRobots\ARNL\include&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\aria&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\ArNetworking&quot;;&quot;C:\Program Files\MobileRobots\Aria\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArNetworking/include&quot;"
+				AdditionalIncludeDirectories="c:\sqlite\include;&quot;C:\Program Files\MobileRobots\ARNL\include\Arnetworking&quot;;&quot;C:\Program Files\MobileRobots\ARNL\include\Aria&quot;;.\include;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\include&quot;;&quot;C:\Program Files\MobileRobots\Arnl\include&quot;;&quot;C:\Program Files\MobileRobots\Aria\include&quot;;C:\Temp\boost_1_54_0\boost_1_54_0"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;ARIADLL_EXPORTS"
 				StringPooling="false"
 				MinimalRebuild="false"
@@ -152,11 +153,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="AriaVC9.lib ArNetworkingVC9.lib ArnlVC9.lib BaseArnlVC9.lib winmm.lib ArSpeechSynth_Cepstral_VC9.lib swift.lib ws2_32.lib"
+				AdditionalDependencies="AriaVC9.lib ArNetworkingVC9.lib ArnlVC9.lib BaseArnlVC9.lib springprox.lib sqlite3.lib ArSpeechSynth_Cepstral_Static.lib $(NOINHERIT)"
 				OutputFile="$(OutDir)\$(ProjectName)VC9.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\MobileRobots\Aria\lib&quot;;&quot;C:\Program Files\MobileRobots\Aria\ArSpeechSynth_Cepstral\internalLibs\lib&quot;;&quot;C:\Program Files\MobileRobots\ARNL\lib&quot;"
+				AdditionalLibraryDirectories="&quot;c:\Program Files\MobileRobots\Aria\lib&quot;;c:\sqlite\lib;&quot;C:\Program Files\MobileRobots\ARNL\bin&quot;;.\lib;&quot;C:\Program Files\MobileRobots\Aria\bin&quot;;&quot;C:\Program Files\MobileRobots\ARNL\lib&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				OptimizeReferences="1"
@@ -288,11 +289,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ArServerModeDeliver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ArServerModeSupply.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\ArServerMyMode.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DALRest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DeliverTask.cpp"
 				>
 			</File>
 			<File
@@ -303,10 +316,6 @@
 				RelativePath=".\LecteurCarteTask.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\SupplyTask.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -314,11 +323,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\Include\ArFineInterface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\ArServerModeDeliver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Include\ArServerModeSupply.h"
 				>
 			</File>
 			<File
+				RelativePath=".\Include\ArServerMyMode.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Include\DALRest.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\DeliverTask.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Include\Globals.h"
 				>
 			</File>
 			<File
@@ -327,10 +356,6 @@
 			</File>
 			<File
 				RelativePath=".\Include\LecteurCarteTask.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Include\SupplyTask.h"
 				>
 			</File>
 		</Filter>

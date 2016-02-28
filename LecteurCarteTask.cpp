@@ -37,15 +37,18 @@ myCardReadCB = funct;
 //Connexion au lecteur et ouverture du lecteur
 int LecteurCarteTask::open()
 {
-	ArLog::log(ArLog::Verbose,"Ouverture lecteur carte");
+	
+	ArLog::log(ArLog::Verbose,"Ouverture lecteur carte.... ");
   /* Open reader */ 
 	rc=SPROX_ReaderOpenA(device);
 	if (rc != MI_OK)
 	{
+		ArLog::log(ArLog::Verbose,"failed!!!");
 		myErrorCode=ERR_NOTFOUND;
 		myStatusCode=STATUS_IDLE;
 		return(ERR_NOTFOUND);
 	}
+	ArLog::log(ArLog::Verbose,"OK");
 	SPROX_ControlLedY(1,0,0);
 	
 	/*SPROX_ControlLedY(1,1,1);

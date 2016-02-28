@@ -49,6 +49,7 @@ const char* getGyroStatusString(ArRobot* robot)
 }
 
   ArCepstral g_Cepstral;
+  ArSoundsQueue g_SoundsQueue;
 
 int main(int argc, char **argv)
 {
@@ -90,13 +91,18 @@ int main(int argc, char **argv)
 //
 
 
-if(!(g_Cepstral.init())){
-		ArLog::log(ArLog::Normal,"Cepstral failed");
+	if(!(g_Cepstral.init())){
+			ArLog::log(ArLog::Normal,"Cepstral failed");
+		}
+
+	else{
+		//g_Cepstral.speakf("Hello");
 	}
 
-else{
-	g_Cepstral.speakf("Hello");
-}
+	g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+	g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
+
+	g_SoundsQueue.runAsync();
 
 
   // The robot object
@@ -600,9 +606,11 @@ else{
   }
   
   ArServerModeSupply modeSupply(&server, &robot);
+  //modeSupply.addAsDefaultMode();
   //modeSupply
 
    ArServerModeDeliver modeDeliver(&server, &robot);
+   //modeDeliver.addAsDefaultMode();
   
   // Setup the dock if there is a docking system on board.
   ArServerModeDock *modeDock = NULL;
@@ -848,6 +856,7 @@ else{
   // canceled.
   robot.enableMotors();
   robot.waitForRunExit();
+  g_SoundsQueue.stopRunning();
   Aria::exit(0);
 }
 
