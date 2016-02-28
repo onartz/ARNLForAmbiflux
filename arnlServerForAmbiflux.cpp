@@ -97,12 +97,14 @@ int main(int argc, char **argv)
 
 	else{
 		//g_Cepstral.speakf("Hello");
+		
+		//g_Cepstral.speak("State FSM_START");
 	}
 
-	g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
-	g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
+	//g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+	//g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
 
-	g_SoundsQueue.runAsync();
+	//g_SoundsQueue.runAsync();
 
 
   // The robot object

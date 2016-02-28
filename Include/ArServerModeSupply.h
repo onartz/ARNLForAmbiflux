@@ -29,7 +29,11 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "Aria.h"
 #include "ArServerMode.h"
 #include "LecteurCarteTask.h"
-#include "SupplyTask.h"
+#include "DALRest.h"
+#include "JSONParser.h"
+#include "Globals.h"
+#include "ASyncSpeak.h"
+
 
 /*
 Mode in which the robot has to be supplied by an human operator.
@@ -86,6 +90,12 @@ protected:
 	//Called when a valid http response comes from REST server
 	void handleHttpResponse(char * response);
 	void handleHttpFailed(void);
+	void handleEndSpeaking(void);
+	char * getRandomGreetingMessage();
+	char * getRandomSupplyingMessage();
+	char * getRandomLostMessage();
+
+	//char *getRandomMessage(char**);
 	
 	/// 
 	void supplyTask();
@@ -96,6 +106,12 @@ protected:
 	
 	/// The content to be spupply to the robot
 	const char * myContent;
+
+	char myGreetingMessage[256];
+	char mySupplyingMessage[256];
+	char myLostMessage[256];
+
+
 	//A new card has been read
 	bool myNewCardRead;
 	//Card ID
@@ -106,6 +122,8 @@ protected:
 	char * myHttpResponse;
 	/// Set when Http request failed. Reset when read.
 	bool myHttpRequestFailed;
+	/// Set when speaking is finished
+	bool myEndSpeaking;
 	// The card reader
 	LecteurCarteTask myCardReader;
 
@@ -117,6 +135,7 @@ protected:
 	ArFunctor1C<ArServerModeSupply, char *> myCardReadCB;
 	ArFunctor1C<ArServerModeSupply, char *> myHttpResponseCB;
 	ArFunctorC<ArServerModeSupply> myHttpFailedCB;
+	ArFunctorC<ArServerModeSupply> myEndSpeakingCB;
 
 	DALRest myHttpRequest;
 	//ArSoundsQueue soundQueue;
@@ -126,6 +145,8 @@ protected:
 	int attemptFailed;
 	
 	char errorMessage[64];
+	ASyncSpeak myASyncSpeak;
+	
  
 };
 
