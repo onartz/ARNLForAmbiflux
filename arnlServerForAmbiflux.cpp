@@ -95,16 +95,16 @@ int main(int argc, char **argv)
 			ArLog::log(ArLog::Normal,"Cepstral failed");
 		}
 
-	else{
-		//g_Cepstral.speakf("Hello");
-		
-		//g_Cepstral.speak("State FSM_START");
-	}
+	//else{
+	//	//g_Cepstral.speakf("Hello");
+	//	
+	//	//g_Cepstral.speak("State FSM_START");
+	//}
 
-	//g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
-	//g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
+	g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+	g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
 
-	//g_SoundsQueue.runAsync();
+	g_SoundsQueue.runAsync();
 
 
   // The robot object
@@ -858,6 +858,8 @@ int main(int argc, char **argv)
   // canceled.
   robot.enableMotors();
   robot.waitForRunExit();
+
+  //while(true);
   g_SoundsQueue.stopRunning();
   Aria::exit(0);
 }

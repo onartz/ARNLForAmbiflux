@@ -29,15 +29,28 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "Aria.h"
 #include "ArServerMode.h"
 #include "LecteurCarteTask.h"
-#include "DeliverTask.h"
+#include "DALRest.h"
+#include "JSONParser.h"
+#include "Globals.h"
+#include "ASyncSpeak.h"
 
 /*
-Mode in which the robot has to be supplied by an operator.
+Mode in which the robot has to deliver things
 */
 
 class ArServerModeDeliver : public ArServerMode
 {
 public:
+
+	enum State {
+		FSM_START,
+		FSM_WAITING_FOR_HUMAN_TO_START,
+		FSM_INFORM_FOR_DELIVERY,
+		FSM_WAITING_FOR_HUMAN_TO_END,
+		FSM_OK,
+		FSM_FAILED,
+		FSM_OTHER
+  };
   AREXPORT ArServerModeDeliver(ArServerBase *server, ArRobot *robot, 
 			    bool defunct = false);
   AREXPORT virtual ~ArServerModeDeliver();
@@ -51,37 +64,82 @@ public:
   AREXPORT virtual void checkDefault(void) { activate(); }
   AREXPORT virtual ArActionGroup *getActionGroup(void) { return &myStopGroup; }
   /// Adds to the config
-  AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
-  /// Sets whether we're using the range devices that depend on location
-  AREXPORT void setUseLocationDependentDevices(
-	  bool useLocationDependentDevices, bool internal = false);
-  /// Gets whether we're using the range devices that depend on location
-  AREXPORT bool getUseLocationDependentDevices(void);
-  //funtion triggered when new card read
-  //void readCardCB(int *);
+  //AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
+  ///// Sets whether we're using the range devices that depend on location
+  //AREXPORT void setUseLocationDependentDevices(
+	 // bool useLocationDependentDevices, bool internal = false);
+  ///// Gets whether we're using the range devices that depend on location
+  //AREXPORT bool getUseLocationDependentDevices(void);
+  ////funtion triggered when new card read
+  ////void readCardCB(int *);
    
 
 protected:
-  ArActionDeceleratingLimiter *myLimiterForward;
-  ArActionDeceleratingLimiter *myLimiterBackward;
-  ArActionDeceleratingLimiter *myLimiterLateralLeft;
-  ArActionDeceleratingLimiter *myLimiterLateralRight;
-  ArActionGroupStop myStopGroup;
-  bool myUseLocationDependentDevices;
-  ArFunctor2C<ArServerModeDeliver, ArServerClient *, ArNetPacket *> myNetDeliverCB;
-  //ArFunctor2C<ArServerModeDock, ArServerClient *, ArNetPacket *> myServerGetDeliverInformationsCB;
-
+	ArActionDeceleratingLimiter *myLimiterForward;
+	ArActionDeceleratingLimiter *myLimiterBackward;
+	ArActionDeceleratingLimiter *myLimiterLateralLeft;
+	ArActionDeceleratingLimiter *myLimiterLateralRight;
+	ArActionGroupStop myStopGroup;
+	bool myUseLocationDependentDevices;
+	ArFunctor2C<ArServerModeDeliver, ArServerClient *, ArNetPacket *> myNetDeliverCB;
+  /// Change internal state of FSM
+	void switchState(State state);
+	/// Called a new card has been read by cardREader
+	void handleCardRead(char * cardID);
+	//Called when a valid http response comes from REST server
+	void handleHttpResponse(char * response);
+	void handleHttpFailed(void);
+	void handleEndSpeaking(void);
+	char * getRandomGreetingMessage();
+	char * getRandomDeliveryMessage();
+	char * getRandomLostMessage();
+  
+	void stateChanged(void);
+	void deliverTask();
+	/// Checked if the current operation is ended (done or failed)
+	bool myDone;
   //Functors passed to a class
   ArFunctor1C<ArServerModeDeliver, char*> myDeliverDoneCB;
   ArFunctor1C<ArServerModeDeliver, char*> myDeliverFailedCB;
+  char myGreetingMessage[256];
+	char myDeliveryMessage[256];
+	char myLostMessage[256];
+
+
+	//A new card has been read
+	bool myNewCardRead;
+	//Card ID
+	char * myCardRead;
+	/// Set when a new Http response comes from REST server. Reset when read.
+	bool myHttpNewResponse;
+	/// Content of the response
+	char * myHttpResponse;
+	/// Set when Http request failed. Reset when read.
+	bool myHttpRequestFailed;
+	/// Set when speaking is finished
+	bool myEndSpeaking;
+	// The card reader
+	LecteurCarteTask myCardReader;
+
+	State myState;
+	State myLastState;
+	bool myNewState;
+	ArTime myStartedState;
+
+	ArFunctor1C<ArServerModeDeliver, char *> myCardReadCB;
+	ArFunctor1C<ArServerModeDeliver, char *> myHttpResponseCB;
+	ArFunctorC<ArServerModeDeliver> myHttpFailedCB;
+	ArFunctorC<ArServerModeDeliver> myEndSpeakingCB;
+
+	DALRest myHttpRequest;
+	//ArSoundsQueue soundQueue;
+	//Number of Attempt  to initiate communication with human
+	int attemptFailed;
+	char errorMessage[64];
+	//ASyncSpeak myASyncSpeak;
   
-  
-  //ArFunctor1C<ArServerModeDeliver, int> functor1
-  const char * myContent;
-  void deliverTask();
-  
-  DeliverTask myASyncDeliverTask;
- 
+	const char * myContent;
+
 };
 
 #endif // ARSERVEURMODEDELIVER_H

@@ -47,18 +47,18 @@ static int const numLostMessage = sizeof(lostMessage)/sizeof(lostMessage[0]);
 AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server, 
 					    ArRobot *robot,
 					    bool defunct) : 
-  ArServerMode(robot, server, "supply"),
-  myStopGroup(robot),
-  myNetSupplyCB(this, &ArServerModeSupply::netSupply),
-  myCardReadCB(this, &ArServerModeSupply::handleCardRead),
-	myHttpResponseCB(this, &ArServerModeSupply::handleHttpResponse),
-	myHttpFailedCB(this, &ArServerModeSupply::handleHttpFailed),
-	myEndSpeakingCB(this,&ArServerModeSupply::handleEndSpeaking),
-	myCardReader(&myCardReadCB),
-	myHttpRequest(&myHttpResponseCB, &myHttpFailedCB),
-	myHttpResponse(NULL),
-	myCardRead(NULL),
-	myASyncSpeak(&g_Cepstral, &myEndSpeakingCB)
+		ArServerMode(robot, server, "supply"),
+		myStopGroup(robot),
+		myNetSupplyCB(this, &ArServerModeSupply::netSupply),
+		myCardReadCB(this, &ArServerModeSupply::handleCardRead),
+		myHttpResponseCB(this, &ArServerModeSupply::handleHttpResponse),
+		myHttpFailedCB(this, &ArServerModeSupply::handleHttpFailed),
+		myEndSpeakingCB(this,&ArServerModeSupply::handleEndSpeaking),
+		myCardReader(&myCardReadCB),
+		myHttpRequest(&myHttpResponseCB, &myHttpFailedCB),
+		myHttpResponse(NULL),
+		myCardRead(NULL),
+		myASyncSpeak(&myEndSpeakingCB)
 {
   myMode = "Supply";
 
@@ -75,6 +75,10 @@ AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server,
 	attemptFailed = 0;
 	strcpy(errorMessage, "No error\0");
 	myDone = false;
+	myEndSpeaking = true;
+	if(myCardReader.getRunning())
+		myCardReader.stopRunning();
+	myCardReader.close();
 
   }
 }
@@ -258,8 +262,8 @@ AREXPORT void ArServerModeSupply::userTask(void)
 					myHttpRequestFailed = false;
 					myOperatorsName = string("Guy");
 					sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName.c_str() );
-					myASyncSpeak.setText(myGreetingMessage);
-					myASyncSpeak.runAsync();
+					//myASyncSpeak.setText(myGreetingMessage);
+					//myASyncSpeak.runAsync();
 					//ArLog::log(ArLog::Normal,myGreetingMessage);
 					//g_Cepstral.speak(myGreetingMessage);
 					switchState(FSM_INFORM_FOR_SUPPLY);		
@@ -275,8 +279,8 @@ AREXPORT void ArServerModeSupply::userTask(void)
 							//ArLog::log(ArLog::Normal,getRandomGreetingMessage(),myOperatorsName.c_str());
 							sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName );
 							ArLog::log(ArLog::Normal,myGreetingMessage);
-							myASyncSpeak.setText(myGreetingMessage);
-							myASyncSpeak.runAsync();
+							//myASyncSpeak.setText(myGreetingMessage);
+							//myASyncSpeak.runAsync();
 							//g_Cepstral.speakf(myGreetingMessage);
 							//printf("Operators name : %s",myOperatorsName.c_str());
 
@@ -290,8 +294,8 @@ AREXPORT void ArServerModeSupply::userTask(void)
 							ArLog::log(ArLog::Normal,"Unable to read JSON content");
 							sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName );
 							ArLog::log(ArLog::Normal,myGreetingMessage);
-							myASyncSpeak.setText(myGreetingMessage);
-							myASyncSpeak.runAsync();
+							//myASyncSpeak.setText(myGreetingMessage);
+							//myASyncSpeak.runAsync();
 								
 							myOperatorsName = string("Guy");			
 						}
@@ -310,13 +314,13 @@ AREXPORT void ArServerModeSupply::userTask(void)
 					if(myNewState){
 						ArLog::log(ArLog::Normal,"State FSM_INFORM_FOR_SUPPLY");
 						myNewState = false;
-						myCardReader.open();
-						myCardReader.runAsync();
+						//myCardReader.open();
+						//myCardReader.runAsync();
 						myNewState = false;
 						sprintf(mySupplyingMessage,getRandomGreetingMessage(),myContent );
 						ArLog::log(ArLog::Normal,mySupplyingMessage);
-						myASyncSpeak.setText(mySupplyingMessage);
-						myASyncSpeak.runAsync();
+						//myASyncSpeak.setText(mySupplyingMessage);
+						//myASyncSpeak.runAsync();
 
 						
 						break;
@@ -325,6 +329,7 @@ AREXPORT void ArServerModeSupply::userTask(void)
 					//We have to wait until the end of speach
 					if(myEndSpeaking){
 						myEndSpeaking = false;
+						//myASyncSpeak.stopRunning();
 						switchState(FSM_WAITING_FOR_HUMAN_TO_END);
 					}
 					
@@ -348,8 +353,8 @@ AREXPORT void ArServerModeSupply::userTask(void)
 							//Cepstral : "Are you still here "
 							//sprintf(myLostMessage,getRandomLostMessage(),myContent );
 							ArLog::log(ArLog::Normal,myLostMessage);
-							myASyncSpeak.setText(myLostMessage);
-							myASyncSpeak.runAsync();
+							//myASyncSpeak.setText(myLostMessage);
+							//myASyncSpeak.runAsync();
 							switchState(FSM_WAITING_FOR_HUMAN_TO_END);
 						}
 						break;
@@ -368,12 +373,14 @@ AREXPORT void ArServerModeSupply::userTask(void)
 				case FSM_OK:
 					ArLog::log(ArLog::Normal,"State FSM_END");
 					myDone = true;
+					deactivate();
 					//Say ByeBye
 					
 					break;
 				case FSM_FAILED:
 					ArLog::log(ArLog::Normal,"State FSM_FAILED");
 					myDone = true;
+					deactivate();
 					//Say ByeBye
 					break;
 				default:

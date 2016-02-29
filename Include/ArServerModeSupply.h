@@ -34,7 +34,6 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "Globals.h"
 #include "ASyncSpeak.h"
 
-
 /*
 Mode in which the robot has to be supplied by an human operator.
 */
