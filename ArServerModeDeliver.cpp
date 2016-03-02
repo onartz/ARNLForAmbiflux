@@ -27,20 +27,34 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "ArExport.h"
 #include "ArServerModeDeliver.h"
 #include <boost/algorithm/string/replace.hpp>
-//#include "ASyncSpeak.h"
 #include "Globals.h"
 
-static char* const greetingMessage[]={"Hello\0",
-"Hi\0"};
-static char* const deliveryMessage[]={"Can you give me %s\0",
-"Can you put %s in my case\0",
- "I need %s\0"};
+static char* const greetingMessage[]={"Hello",
+"Hi"};
+static char* const deliveryMessage[]={"I have %s for you.\0",
+"You can take %s from my back.\0",
+"This is for you : %s\0"};
 
-static char* const lostMessage[]={"Are you here?\0",
-"Where are you?\0",
- "Is there anybody here?\0"};
+static char* const lostMessage[]={"Are you here?",
+"Where are you?",
+ "Is there anybody here?"};
 
-//ArSoundsQueue g_SoundsQueue;
+void queueNowEmpty(){
+	ArLog::log(ArLog::Normal,"The queue is empty");
+}
+
+void queueNowNotEmpty(){
+	ArLog::log(ArLog::Normal,"The queue is not empty");
+}
+
+void soundTerminated(){
+	ArLog::log(ArLog::Normal,"The sound is terminated");
+}
+
+
+
+
+//ArSoundsQueue soundsQueue;
 
 static int const numGreetingMessage = sizeof(greetingMessage)/sizeof(greetingMessage[0]);
 static int const numDeliveryingMessage = sizeof(deliveryMessage)/sizeof(deliveryMessage[0]);
@@ -55,7 +69,8 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
 		myCardReadCB(this, &ArServerModeDeliver::handleCardRead),
 		myHttpResponseCB(this, &ArServerModeDeliver::handleHttpResponse),
 		myHttpFailedCB(this, &ArServerModeDeliver::handleHttpFailed),
-		myEndSpeakingCB(this,&ArServerModeDeliver::handleEndSpeaking),
+		mySoundFinishedCB(this,&ArServerModeDeliver::handleSoundFinished),
+		mySoundsQueueEmptyCB(this, &ArServerModeDeliver::handleSoundsQueueIsEmpty),
 		myCardReader(&myCardReadCB),
 		myHttpRequest(&myHttpResponseCB, &myHttpFailedCB),
 		myHttpResponse(NULL),
@@ -67,6 +82,7 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
   
   if (myServer != NULL)
   {
+	 
     addModeData("deliver", "deliver the robot", &myNetDeliverCB,
 		"string: content", "none", "Deliver", "RETURN_NONE");
 	myNewCardRead = false;
@@ -77,10 +93,36 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
 	attemptFailed = 0;
 	strcpy(errorMessage, "No error\0");
 	myDone = false;
-	myEndSpeaking = true;
+	mySoundFinished = false;
 	if(myCardReader.getRunning())
 		myCardReader.stopRunning();
 	myCardReader.close();
+
+	speechSynthesizer = new ArCepstral();
+	if(!speechSynthesizer) {
+		ArLog::log(ArLog::Terse, "Error: no speech synthesizer is available. Are we linked to ArSpeechSynth_Cepstral or ArSpeechSynth_Festival? Are they broken?");
+  }
+
+	mySoundsQueue = new ArSoundsQueue(speechSynthesizer,
+		speechSynthesizer->getInitCallback(),
+		ArSoundPlayer::getPlayWavFileCallback(),
+		speechSynthesizer->getInterruptCallback());
+	//speechSynthesizer->init();
+	//ArSoundsQueue soundQueue;
+	//mySoundsQueue->addInitCallback(speechSynthesizer->getInitCallback());
+	//Obligatoire pour la parole, sinon, pas de son
+	//mySoundsQueue->setSpeakCallback(speechSynthesizer->getSpeakCallback());
+	
+	//Obligatoire pour jouer des fichiers, sinon, pas de son
+	//mySoundsQueue->setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+	//mySoundsQueue->addQueueEmptyCallback(new ArGlobalFunctor(&queueNowEmpty));
+	//mySoundsQueue->addQueueEmptyCallback(&mySoundsQueueEmptyCB);
+	//mySoundsQueue->addQueueNonemptyCallback(new ArGlobalFunctor(&queueNowNotEmpty));
+	mySoundsQueue->addSoundFinishedCallback(new ArGlobalFunctor(&soundTerminated));
+	
+	
+	//Obligé de le mettre là, sinon ça ne marche pas
+	mySoundsQueue->runAsync();
 	
 	
 	//myServer->addData("deliverInfos","Deliver informations",
@@ -91,6 +133,12 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
 
 AREXPORT ArServerModeDeliver::~ArServerModeDeliver()
 {
+	delete speechSynthesizer;
+}
+
+void ArServerModeDeliver::handleSoundFinished(){
+	ArLog::log(ArLog::Normal,"The sound is finished");
+	mySoundFinished = true;
 }
 
 
@@ -111,10 +159,15 @@ void ArServerModeDeliver::handleHttpFailed(){
 	myHttpRequestFailed = true;
 }
 
-void ArServerModeDeliver::handleEndSpeaking(){
-	ArLog::log(ArLog::Normal,"End speaking");
-	myEndSpeaking = true;
+void ArServerModeDeliver::handleSoundsQueueIsEmpty(){
+	ArLog::log(ArLog::Normal,"Queue is empty");
+	mySoundsQueueEmpty = true;
 }
+
+//void ArServerModeDeliver::handleEndSpeaking(){
+//	ArLog::log(ArLog::Normal,"End speaking");
+//	myEndSpeaking = true;
+//}
 
 void ArServerModeDeliver::switchState(State state)
 {
@@ -128,13 +181,14 @@ void ArServerModeDeliver::switchState(State state)
 
 void ArServerModeDeliver::stateChanged(void)
 {
-	//g_SoundsQueue.play("c:\\temp\\ShortCircuit.wav");
+	//mySoundsQueue->play("c:\\temp\\ShortCircuit.wav");
 	if((myLastState !=  myState) && myState == FSM_WAITING_FOR_HUMAN_TO_START)
 		myStatus = "Waiting";
 	/*if((myLastState !=  myState) && myState == FSM_SEND_IDENTIFICATION_REQ)
 		myStatus = "Identifying";*/
-	if((myLastState !=  myState) && myState == FSM_INFORM_FOR_DELIVERY)
+	if((myLastState !=  myState) && myState == FSM_INFORM_FOR_DELIVERY){
 		myStatus = "Deliverying";
+	}
 	if(myState == FSM_OK)
 		myStatus = "Done  by " + std::string(myCardRead);
 	if(myState == FSM_FAILED)
@@ -156,6 +210,9 @@ AREXPORT void ArServerModeDeliver::activate(void)
     return;*/
   
   setActivityTimeToNow();
+  mySoundsQueue->stop();
+	  mySoundsQueue->clearQueue();
+  mySoundsQueue->runAsync();
   //myStatus = "Starting deliver operation";
   deliverTask();
 }
@@ -165,6 +222,8 @@ AREXPORT void ArServerModeDeliver::deactivate(void)
 	//myASyncSpeak.stopRunning();
 	//ArLog::log(ArLog::Normal,"ASyncSpeak.running %d",myASyncSpeak.getRunningWithLock()?0:1);
 	  myStopGroup.deactivate();
+	  //mySoundsQueue->stop();
+	  //delete speechSynthesizer;
 	  baseDeactivate();
 }
 
@@ -193,41 +252,36 @@ AREXPORT void ArServerModeDeliver::deliver(const char *content)
 
 AREXPORT void ArServerModeDeliver::userTask(void)
 {
-		if(!myDone)
+	ArLog::log(ArLog::Normal,"SoundsQueue %s", mySoundsQueue->isPlaying() ? "is speaking.":"is not speaking");
+	if(!myDone)
 	{
 		switch(myState){
 			case FSM_START:
 				if(myNewState){
-					//Let's sound something or call using playSound
 					ArLog::log(ArLog::Normal,"State FSM_START");
 					myNewCardRead = false;
 					myHttpNewResponse = false;
 					myHttpRequestFailed = false;
 					myNewState = false;
-					//myOperatorsName = "";
-					//attemptFailed = 0;
 					strcpy(errorMessage, "No error\0");
-					g_SoundsQueue.play("c:\\temp\\ShortCircuit.wav");	
 					switchState(FSM_WAITING_FOR_HUMAN_TO_START);
-				
-					//myASyncSpeak.lock();
-					/*myASyncSpeak.setText("State FSM_START");
-					myASyncSpeak.runAsync();*/
 					
-					//g_Cepstral.speak("State FSM_START.");
-					
-					//ArLog::log(ArLog::Normal,"Content : %s",myContent);
-					
-					/*sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName );
-								ArLog::log(ArLog::Normal,myGreetingMessage);*/
-								//g_Cepstral.speak(myGreetingMessage);
+					//mySoundsQueue->play("c:\\temp\\ShortCircuit.wav");
+					//mySoundsQueue->runAsync();
+					break;
 				}
-				//We have to wait until the end of speach
-				/*if(myEndSpeaking){
-					myEndSpeaking = false;
+				if((!mySoundsQueue->isSpeakingOrPlaying() && mySoundsQueue->isInitialized()) || myStartedState.secSince() > 2){
+				//	//if(mySoundFinished){
+				//		//mySoundFinished = false;
+						switchState(FSM_WAITING_FOR_HUMAN_TO_START);
+					}
+				/*if(mySoundFinished){
+					mySoundFinished = false;
 					switchState(FSM_WAITING_FOR_HUMAN_TO_START);
 				}*/
+				
 				break;
+
 			case FSM_WAITING_FOR_HUMAN_TO_START:
 				if(myNewState){
 					ArLog::log(ArLog::Normal,"State FSM_WAITING_FOR_HUMAN_TO_START");
@@ -236,7 +290,6 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 						myCardReader.runAsync();
 					}
 					myNewState = false;
-					myStatus = "Waiting";
 				}
 				if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
 					if(attemptFailed++ >= MAX_ATTEMPTS_FAILED){
@@ -244,7 +297,6 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 						myCardReader.close();
 						strcpy(errorMessage,"Human not present\0");
 						switchState(FSM_FAILED);
-						
 					}
 					else{
 						
@@ -255,108 +307,43 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 				//New card detected
 				if(myNewCardRead){
 					myNewCardRead = false;
-					//myCardReader.stopRunning();
-					//myCardReader.close();
 					switchState(FSM_INFORM_FOR_DELIVERY);		
 				}	
 				break;
-
-			//case FSM_SEND_IDENTIFICATION_REQ:
-			//	if(myNewState){
-			//		ArLog::log(ArLog::Normal,"State FSM_IDENTIFICATION");
-			//		/*myASyncSpeak.setText("State FSM_IDENTIFICATION");
-			//		myASyncSpeak.runAsync();*/
-			//		//myASyncSpeak.speak("State FSM_IDENTIFICATION.");
-			//		//attemptFailed = 0;
-			//		myNewState = false;
-			//		//Identify Card Owner	
-			//		std::string req("employeeByCardId");
-			//		std::string param(myCardRead);
-			//				
-			//		//Send http request to REST Server
-			//		//myHttpRequest.sendRequest(&myHttpResponseCB, req, param);	
-			//		myHttpRequest.sendRequest(req, param);	
-			//		//switchState(FSM_WAITING_FOR_IDENTIFICATION);
-			//		break;
-			//	}
-			//	if(myHttpRequestFailed){
-			//		myHttpRequestFailed = false;
-			//		myOperatorsName = string("Guy");
-			//		sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName.c_str() );
-			//		myASyncSpeak.setText(myGreetingMessage);
-			//		myASyncSpeak.runAsync();
-			//		//ArLog::log(ArLog::Normal,myGreetingMessage);
-			//		//g_Cepstral.speak(myGreetingMessage);
-			//		switchState(FSM_INFORM_FOR_SUPPLY);		
-			//		break;
-			//	}
-			//	else if(myHttpNewResponse){
-			//			myHttpNewResponse = false;
-
-			//			//It seems to be a valid response from server
-			//			try{	
-			//				boost::property_tree::ptree pt = JSONParser::parse(myHttpResponse);		
-			//				myOperatorsName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("firstname").c_str()));						
-			//				//ArLog::log(ArLog::Normal,getRandomGreetingMessage(),myOperatorsName.c_str());
-			//				sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName );
-			//				ArLog::log(ArLog::Normal,myGreetingMessage);
-			//				myASyncSpeak.setText(myGreetingMessage);
-			//				myASyncSpeak.runAsync();
-			//				//g_Cepstral.speakf(myGreetingMessage);
-			//				//printf("Operators name : %s",myOperatorsName.c_str());
-
-			//				//lastName = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("lastname").c_str()));
-			//				//cardId = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("cardID").c_str()));
-			//				//emailAddress = string((char*)(pt.get_child("GetEmployeeByCardIdResult").get<std::string>("emailAddress").c_str()));	
-			//				}
-			//			catch(std::exception const&  ex){
-			//				myHttpResponse = NULL;
-			//				printf("JSON Error. %s", ex.what());
-			//				ArLog::log(ArLog::Normal,"Unable to read JSON content");
-			//				sprintf(myGreetingMessage,getRandomGreetingMessage(),myOperatorsName );
-			//				ArLog::log(ArLog::Normal,myGreetingMessage);
-			//				myASyncSpeak.setText(myGreetingMessage);
-			//				myASyncSpeak.runAsync();
-			//					
-			//				myOperatorsName = string("Guy");			
-			//			}
-			//				
-			//			//myHttpResponse = NULL;
-			//			//We have to wait until the end of speach
-			//			if(myEndSpeaking){
-			//				myEndSpeaking = false;
-			//				switchState(FSM_INFORM_FOR_SUPPLY);
-			//			}
-			//		}
-			//	
-			//	break;
 			
 				case FSM_INFORM_FOR_DELIVERY:
 					if(myNewState){
 						ArLog::log(ArLog::Normal,"State FSM_INFORM_FOR_DELIVERY");
 						myNewState = false;
-						//myCardReader.open();
-						//myCardReader.runAsync();
-						sprintf(myDeliveryMessage,getRandomGreetingMessage(),myContent );
-						ArLog::log(ArLog::Normal,"Delivery message : %s",myDeliveryMessage);
 						
-						/*if(myASyncSpeak.getRunning())
-							myASyncSpeak.stopRunning();*/
-						//myASyncSpeak.lockMutex();
-						myEndSpeaking = false;
-						g_Cepstral.speak(myDeliveryMessage);
-						switchState(FSM_WAITING_FOR_HUMAN_TO_END);
-						//myASyncSpeak.setText("Hello\0");
-						//myASyncSpeak.unlockMutex();
-						//myASyncSpeak.runAsync();					
-						break;
-						//Cepstral : "In formation + Use your badge to teminate"
+						//sprintf(myDeliveryMessage,getRandomDeliveryMessage(),myContent );
+						//sprintf(myDeliveryMessage,myContent);
+						//ArLog::log(ArLog::Normal,"Delivery message : %s", myDeliveryMessage);
+						//std::string str = "Hello";
+						//mySoundsQueue->speak(getRandomGreetingMessage());
+						mySoundsQueue->speak("Hello");
+						//ArUtil::sleep(100);
+						
+						//mySoundsQueue->speak("Hello hehe");
+						//ArUtil::sleep(100);
+						//mySoundsQueue->speak("Nice to see you again");
+						//mySoundsQueue->runAsync();
+					
 					}
-					//We have to wait until the end of speech
-					//if(myEndSpeaking){
-					//	ArLog::log(ArLog::Normal,"End of speech in mode deliver.");
-					//	myEndSpeaking = false;
-					//	//myASyncSpeak.stopRunning();
+					if(!mySoundsQueue->isPlaying())
+						switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+
+					//|| myStartedState.secSince()> 5
+					//if((!mySoundsQueue->isPlaying() && mySoundsQueue->isInitialized())|| myStartedState.secSince()> 30){
+					//////if(mySoundFinished == true){
+					////	//mySoundFinished = false;
+					//	switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+					//}
+				
+					
+					//if(!(mySoundsQueue->isSpeakingOrPlaying())){
+					//	ArLog::log(ArLog::Normal,"Speech terminated.");
+					//	//mySoundsQueue->stop();
 					//	switchState(FSM_WAITING_FOR_HUMAN_TO_END);
 					//}
 					break;
@@ -372,29 +359,33 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 							myCardReader.close();
 							strcpy(errorMessage,"Human forgot me\0");
 							switchState(FSM_FAILED);
+							break;
 							
 						}
 						else{
 							//Cepstral : "Are you still here "
-							sprintf(myLostMessage,getRandomLostMessage(),myContent );
-							ArLog::log(ArLog::Normal,myLostMessage);
-							g_Cepstral.speak(myLostMessage);
-							//myASyncSpeak.lockMutex();
-							//myASyncSpeak.setText("Hi Olivier\0");
-							//myASyncSpeak.unlockMutex();
-							//myASyncSpeak.runAsync();
+							//sprintf(myLostMessage,getRandomLostMessage(),myContent );
+							//ArLog::log(ArLog::Normal,myLostMessage);
+							//mySoundsQueue->speak(myLostMessage);
+							//mySoundsQueue->runAsync();
 							switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+							break;	
 						}
-						break;
+						//if((!(mySoundsQueue->isSpeaking()) && mySoundsQueue->isInitialized())|| myStartedState.secSince()> 2){
+						////if(mySoundFinished == true){
+						//	//mySoundFinished = false;
+						//	switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+						//	break;
+						//}
+						
 					}
+					
+				
+				/*	if(mySoundFinished == true){
+						mySoundFinished = false;
+						switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+					}*/
 
-					//We have to wait until the end of speech
-					//if(myEndSpeaking){
-					//	myEndSpeaking = false;
-					//	//myASyncSpeak.stopRunning();
-					//	switchState(FSM_WAITING_FOR_HUMAN_TO_END);
-					//	break;
-					//}
 					
 					//New card detected
 					if(myNewCardRead){
@@ -407,14 +398,44 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 
 
 				case FSM_OK:
-					ArLog::log(ArLog::Normal,"State FSM_END");
-					if(myCardReader.getRunning()){
-						myCardReader.stopRunning();
+					if(myNewState){
+						ArLog::log(ArLog::Normal,"State FSM_END");
+						myNewState = false;
+						if(myCardReader.getRunning()){
+							myCardReader.stopRunning();
+						}
 						myCardReader.close();
+						//ArLog::log(ArLog::Normal, "mySoundsQueue->isRunning %s",mySoundsQueue->getRunning() ? "Yes":"No");
+						//mySoundsQueue->stop();
+						//mySoundsQueue->runAsync();
+						mySoundsQueue->clearQueue();
+						mySoundsQueue->speak("It was a pleasure. Bye.");
+						//break;
 					}
-					myDone = true;
-					deactivate();
-					//Say ByeBye
+
+					if(!mySoundsQueue->isPlaying())
+						deactivate();
+					/*if((!mySoundsQueue->isPlaying() && mySoundsQueue->isInitialized()) || myStartedState.secSince() > 10){
+						myDone = true;
+						deactivate();
+					}*/
+					//if(myStartedState.secSince() > 3){
+
+					///* while (mySoundsQueue->isSpeakingOrPlaying() || !mySoundsQueue->isInitialized())
+					//	ArUtil::sleep(100);*/
+					//if((!(mySoundsQueue->isSpeaking()) && mySoundsQueue->isInitialized())|| myStartedState.secSince()> 5){
+					//////if(mySoundFinished == true){
+					////	//mySoundFinished = false;
+					//	myDone = true;
+					//	deactivate();
+					//}
+					////	//switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+					//}
+				
+			/*		if(mySoundFinished == true){
+						myDone = true;
+						deactivate();
+					}*/
 					
 					break;
 				case FSM_FAILED:
@@ -435,15 +456,15 @@ AREXPORT void ArServerModeDeliver::userTask(void)
  
 }
 
-char* ArServerModeDeliver::getRandomGreetingMessage(){
+const char* ArServerModeDeliver::getRandomGreetingMessage(){
 	return greetingMessage[rand()%numGreetingMessage];
 }
 
-char* ArServerModeDeliver::getRandomDeliveryMessage(){
+const char* ArServerModeDeliver::getRandomDeliveryMessage(){
 	return deliveryMessage[rand()%numDeliveryingMessage];
 }
 
-char* ArServerModeDeliver::getRandomLostMessage(){
+const char* ArServerModeDeliver::getRandomLostMessage(){
 	return lostMessage[rand()%numLostMessage];
 }
 
@@ -481,6 +502,7 @@ void ArServerModeDeliver::deliverTask(){
 	
 	printf("Deliver task started with content : %s",myContent);
 	myDone = false;
+	
 	switchState(FSM_START);
 	
 }

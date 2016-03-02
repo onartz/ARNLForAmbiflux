@@ -48,8 +48,8 @@ const char* getGyroStatusString(ArRobot* robot)
   return "OK";
 }
 
-  ArCepstral g_Cepstral;
-  ArSoundsQueue g_SoundsQueue;
+  //ArCepstral g_Cepstral;
+  //ArSoundsQueue g_SoundsQueue;
 
 int main(int argc, char **argv)
 {
@@ -57,6 +57,25 @@ int main(int argc, char **argv)
   // Initialize Aria and Arnl global information
   Aria::init();
   Arnl::init();
+
+ // ArSpeechSynth* speechSynthesizer = new ArCepstral();
+ // if(!speechSynthesizer) {
+ //   ArLog::log(ArLog::Terse, "Error: no speech synthesizer is available. Are we linked to ArSpeechSynth_Cepstral or ArSpeechSynth_Festival? Are they broken?");
+ //   exit(-1);
+ // }
+ ////ArSoundsQueue soundQueue;
+ // g_SoundsQueue.addInitCallback(speechSynthesizer->getInitCallback());
+ // g_SoundsQueue.setSpeakCallback(speechSynthesizer->getSpeakCallback());
+
+  //g_SoundsQueue.speak("Hello guy how are you now??\0");
+
+
+  // Run the sound queue in a separate thread, and wait for it to stop:
+  /*printf("Running sounds queue in the background...\n");
+  g_SoundsQueue.runAsync();
+  while (g_SoundsQueue.isSpeakingOrPlaying() || !g_SoundsQueue.isInitialized())
+    ArUtil::sleep(100);*/
+
 
 
 
@@ -91,9 +110,9 @@ int main(int argc, char **argv)
 //
 
 
-	if(!(g_Cepstral.init())){
-			ArLog::log(ArLog::Normal,"Cepstral failed");
-		}
+	//if(!(g_Cepstral.init())){
+	//		ArLog::log(ArLog::Normal,"Cepstral failed");
+	//	}
 
 	//else{
 	//	//g_Cepstral.speakf("Hello");
@@ -101,10 +120,10 @@ int main(int argc, char **argv)
 	//	//g_Cepstral.speak("State FSM_START");
 	//}
 
-	g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
-	g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
+	//g_SoundsQueue.setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
+	//g_SoundsQueue.setInterruptWavFileCallback(ArSoundPlayer::getStopPlayingCallback());
 
-	g_SoundsQueue.runAsync();
+	//g_SoundsQueue.runAsync();
 
 
   // The robot object
@@ -607,7 +626,7 @@ int main(int argc, char **argv)
       );
   }
   
-  ArServerModeSupply modeSupply(&server, &robot);
+ // ArServerModeSupply modeSupply(&server, &robot);
   //modeSupply.addAsDefaultMode();
   //modeSupply
 
@@ -860,7 +879,7 @@ int main(int argc, char **argv)
   robot.waitForRunExit();
 
   //while(true);
-  g_SoundsQueue.stopRunning();
+ 
   Aria::exit(0);
 }
 

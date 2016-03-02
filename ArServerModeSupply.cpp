@@ -216,7 +216,7 @@ AREXPORT void ArServerModeSupply::userTask(void)
 					myCardReader.open();
 					myCardReader.runAsync();
 					myNewState = false;
-					myStatus = "Waiting";
+					//myStatus = "Waiting";
 				}
 				if(myStartedState.secSince() > TIMEOUT_ATTENTE_HUMAIN){
 					if(attemptFailed++ >= MAX_ATTEMPTS_FAILED){

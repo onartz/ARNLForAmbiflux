@@ -2,8 +2,8 @@
 #include "ArSoundsQueue.h"
 #include "ArSoundPlayer.h"
 
-extern ArCepstral g_Cepstral;
-extern ArSoundsQueue g_SoundsQueue;
+//extern ArCepstral g_Cepstral;
+//extern ArSoundsQueue g_SoundsQueue;
 
 #ifndef TIMEOUT_ATTENTE_HUMAIN
 	#define TIMEOUT_ATTENTE_HUMAIN 30

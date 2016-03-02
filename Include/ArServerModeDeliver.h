@@ -31,8 +31,11 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "LecteurCarteTask.h"
 #include "DALRest.h"
 #include "JSONParser.h"
-#include "Globals.h"
-#include "ASyncSpeak.h"
+//#include "Globals.h"
+//#include "ASyncSpeak.h"
+#include "ArSpeech.h"
+#include "ArCepstral.h"
+#include "ArSoundsQueue.h"
 
 /*
 Mode in which the robot has to deliver things
@@ -75,12 +78,12 @@ public:
    
 
 protected:
-	ArActionDeceleratingLimiter *myLimiterForward;
+	/*ArActionDeceleratingLimiter *myLimiterForward;
 	ArActionDeceleratingLimiter *myLimiterBackward;
 	ArActionDeceleratingLimiter *myLimiterLateralLeft;
-	ArActionDeceleratingLimiter *myLimiterLateralRight;
+	ArActionDeceleratingLimiter *myLimiterLateralRight;*/
 	ArActionGroupStop myStopGroup;
-	bool myUseLocationDependentDevices;
+	//bool myUseLocationDependentDevices;
 	ArFunctor2C<ArServerModeDeliver, ArServerClient *, ArNetPacket *> myNetDeliverCB;
   /// Change internal state of FSM
 	void switchState(State state);
@@ -89,10 +92,11 @@ protected:
 	//Called when a valid http response comes from REST server
 	void handleHttpResponse(char * response);
 	void handleHttpFailed(void);
-	void handleEndSpeaking(void);
-	char * getRandomGreetingMessage();
-	char * getRandomDeliveryMessage();
-	char * getRandomLostMessage();
+	void handleSoundsQueueIsEmpty(void);
+	//void handleEndSpeaking(void);
+	const char * getRandomGreetingMessage();
+	const char * getRandomDeliveryMessage();
+	const char * getRandomLostMessage();
   
 	void stateChanged(void);
 	void deliverTask();
@@ -117,7 +121,8 @@ protected:
 	/// Set when Http request failed. Reset when read.
 	bool myHttpRequestFailed;
 	/// Set when speaking is finished
-	bool myEndSpeaking;
+	//bool myEndSpeaking;
+	bool mySoundFinished;
 	// The card reader
 	LecteurCarteTask myCardReader;
 
@@ -129,7 +134,11 @@ protected:
 	ArFunctor1C<ArServerModeDeliver, char *> myCardReadCB;
 	ArFunctor1C<ArServerModeDeliver, char *> myHttpResponseCB;
 	ArFunctorC<ArServerModeDeliver> myHttpFailedCB;
-	ArFunctorC<ArServerModeDeliver> myEndSpeakingCB;
+	ArFunctorC<ArServerModeDeliver> mySoundFinishedCB;
+	ArFunctorC<ArServerModeDeliver> mySoundsQueueEmptyCB;
+
+	bool mySoundsQueueEmpty;
+	void handleSoundFinished();
 
 	DALRest myHttpRequest;
 	//ArSoundsQueue soundQueue;
@@ -139,6 +148,8 @@ protected:
 	//ASyncSpeak myASyncSpeak;
   
 	const char * myContent;
+	ArSpeechSynth *speechSynthesizer;
+	ArSoundsQueue *mySoundsQueue;
 
 };
 
