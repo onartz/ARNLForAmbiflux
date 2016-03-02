@@ -31,9 +31,9 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 
 static char* const greetingMessage[]={"Hello",
 "Hi"};
-static char* const deliveryMessage[]={"I have %s for you.\0",
-"You can take %s from my back.\0",
-"This is for you : %s\0"};
+static char* const deliveryMessage[]={"I have %s for you.",
+"You can take %s from my back.",
+"This is for you : %s"};
 
 static char* const lostMessage[]={"Are you here?",
 "Where are you?",
@@ -107,19 +107,8 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
 		speechSynthesizer->getInitCallback(),
 		ArSoundPlayer::getPlayWavFileCallback(),
 		speechSynthesizer->getInterruptCallback());
-	//speechSynthesizer->init();
-	//ArSoundsQueue soundQueue;
-	//mySoundsQueue->addInitCallback(speechSynthesizer->getInitCallback());
-	//Obligatoire pour la parole, sinon, pas de son
-	//mySoundsQueue->setSpeakCallback(speechSynthesizer->getSpeakCallback());
 	
-	//Obligatoire pour jouer des fichiers, sinon, pas de son
-	//mySoundsQueue->setPlayWavFileCallback(ArSoundPlayer::getPlayWavFileCallback());
-	//mySoundsQueue->addQueueEmptyCallback(new ArGlobalFunctor(&queueNowEmpty));
-	//mySoundsQueue->addQueueEmptyCallback(&mySoundsQueueEmptyCB);
-	//mySoundsQueue->addQueueNonemptyCallback(new ArGlobalFunctor(&queueNowNotEmpty));
-	mySoundsQueue->addSoundFinishedCallback(new ArGlobalFunctor(&soundTerminated));
-	
+	mySoundsQueue->addSoundFinishedCallback(&mySoundFinishedCB);
 	
 	//Obligé de le mettre là, sinon ça ne marche pas
 	mySoundsQueue->runAsync();
@@ -134,10 +123,11 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
 AREXPORT ArServerModeDeliver::~ArServerModeDeliver()
 {
 	delete speechSynthesizer;
+	delete mySoundsQueue;
 }
 
 void ArServerModeDeliver::handleSoundFinished(){
-	ArLog::log(ArLog::Normal,"The sound is finished");
+	//ArLog::log(ArLog::Normal,"The sound is finished");
 	mySoundFinished = true;
 }
 
@@ -209,12 +199,12 @@ AREXPORT void ArServerModeDeliver::activate(void)
  /*if (!baseActivate())
     return;*/
   
-  setActivityTimeToNow();
-  mySoundsQueue->stop();
-	  mySoundsQueue->clearQueue();
-  mySoundsQueue->runAsync();
-  //myStatus = "Starting deliver operation";
-  deliverTask();
+	setActivityTimeToNow();
+	mySoundsQueue->stop();
+	mySoundsQueue->clearQueue();
+	mySoundsQueue->runAsync();
+	//myStatus = "Starting deliver operation";
+	deliverTask();
 }
 
 AREXPORT void ArServerModeDeliver::deactivate(void)
@@ -252,7 +242,7 @@ AREXPORT void ArServerModeDeliver::deliver(const char *content)
 
 AREXPORT void ArServerModeDeliver::userTask(void)
 {
-	ArLog::log(ArLog::Normal,"SoundsQueue %s", mySoundsQueue->isPlaying() ? "is speaking.":"is not speaking");
+	//ArLog::log(ArLog::Normal,"SoundsQueue %s", mySoundsQueue->isPlaying() ? "is speaking.":"is not speaking");
 	if(!myDone)
 	{
 		switch(myState){
@@ -266,19 +256,15 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 					strcpy(errorMessage, "No error\0");
 					switchState(FSM_WAITING_FOR_HUMAN_TO_START);
 					
-					//mySoundsQueue->play("c:\\temp\\ShortCircuit.wav");
-					//mySoundsQueue->runAsync();
+					mySoundsQueue->play("c:\\temp\\scifi025.wav");
 					break;
 				}
-				if((!mySoundsQueue->isSpeakingOrPlaying() && mySoundsQueue->isInitialized()) || myStartedState.secSince() > 2){
-				//	//if(mySoundFinished){
-				//		//mySoundFinished = false;
-						switchState(FSM_WAITING_FOR_HUMAN_TO_START);
-					}
-				/*if(mySoundFinished){
+				if(mySoundFinished || myStartedState.secSince() > 8){
 					mySoundFinished = false;
 					switchState(FSM_WAITING_FOR_HUMAN_TO_START);
-				}*/
+				}
+
+				
 				
 				break;
 
@@ -320,8 +306,8 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 						//sprintf(myDeliveryMessage,myContent);
 						//ArLog::log(ArLog::Normal,"Delivery message : %s", myDeliveryMessage);
 						//std::string str = "Hello";
-						//mySoundsQueue->speak(getRandomGreetingMessage());
-						mySoundsQueue->speak("Hello");
+						mySoundsQueue->speak(getRandomGreetingMessage());
+						//mySoundsQueue->speak("Hello");
 						//ArUtil::sleep(100);
 						
 						//mySoundsQueue->speak("Hello hehe");
@@ -330,8 +316,12 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 						//mySoundsQueue->runAsync();
 					
 					}
-					if(!mySoundsQueue->isPlaying())
+					if(mySoundFinished || myStartedState.secSince() > 3){
+						mySoundFinished = false;
 						switchState(FSM_WAITING_FOR_HUMAN_TO_END);
+				}
+					/*if(!mySoundsQueue->isPlaying())
+						switchState(FSM_WAITING_FOR_HUMAN_TO_END);*/
 
 					//|| myStartedState.secSince()> 5
 					//if((!mySoundsQueue->isPlaying() && mySoundsQueue->isInitialized())|| myStartedState.secSince()> 30){
@@ -405,37 +395,15 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 							myCardReader.stopRunning();
 						}
 						myCardReader.close();
-						//ArLog::log(ArLog::Normal, "mySoundsQueue->isRunning %s",mySoundsQueue->getRunning() ? "Yes":"No");
-						//mySoundsQueue->stop();
-						//mySoundsQueue->runAsync();
-						mySoundsQueue->clearQueue();
+						//mySoundsQueue->clearQueue();
 						mySoundsQueue->speak("It was a pleasure. Bye.");
 						//break;
 					}
 
-					if(!mySoundsQueue->isPlaying())
+					if(mySoundFinished || myStartedState.secSince() > 8){
+						mySoundFinished = false;
 						deactivate();
-					/*if((!mySoundsQueue->isPlaying() && mySoundsQueue->isInitialized()) || myStartedState.secSince() > 10){
-						myDone = true;
-						deactivate();
-					}*/
-					//if(myStartedState.secSince() > 3){
-
-					///* while (mySoundsQueue->isSpeakingOrPlaying() || !mySoundsQueue->isInitialized())
-					//	ArUtil::sleep(100);*/
-					//if((!(mySoundsQueue->isSpeaking()) && mySoundsQueue->isInitialized())|| myStartedState.secSince()> 5){
-					//////if(mySoundFinished == true){
-					////	//mySoundFinished = false;
-					//	myDone = true;
-					//	deactivate();
-					//}
-					////	//switchState(FSM_WAITING_FOR_HUMAN_TO_END);
-					//}
-				
-			/*		if(mySoundFinished == true){
-						myDone = true;
-						deactivate();
-					}*/
+					}
 					
 					break;
 				case FSM_FAILED:

@@ -26,13 +26,17 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #ifndef ARSERVEURMODESUPPLY_H
 #define ARSERVEURMODESUPPLY_H
 
+
 #include "Aria.h"
 #include "ArServerMode.h"
 #include "LecteurCarteTask.h"
 #include "DALRest.h"
 #include "JSONParser.h"
-#include "Globals.h"
-#include "ASyncSpeak.h"
+//#include "Globals.h"
+//#include "ASyncSpeak.h"
+#include "ArSpeech.h"
+#include "ArCepstral.h"
+#include "ArSoundsQueue.h"
 
 /*
 Mode in which the robot has to be supplied by an human operator.
@@ -66,7 +70,7 @@ public:
   
   AREXPORT virtual ArActionGroup *getActionGroup(void) { return &myStopGroup; }
   /// Adds to the config
-  AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
+  //AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
   /// Sets whether we're using the range devices that depend on location
  // AREXPORT void setUseLocationDependentDevices(
 	 //bool useLocationDependentDevices, bool internal = false);
@@ -75,12 +79,12 @@ public:
    
 
 protected:
-	ArActionDeceleratingLimiter *myLimiterForward;
+	/*ArActionDeceleratingLimiter *myLimiterForward;
 	ArActionDeceleratingLimiter *myLimiterBackward;
 	ArActionDeceleratingLimiter *myLimiterLateralLeft;
-	ArActionDeceleratingLimiter *myLimiterLateralRight;
+	ArActionDeceleratingLimiter *myLimiterLateralRight;*/
 	ArActionGroupStop myStopGroup;
-	bool myUseLocationDependentDevices;
+	//bool myUseLocationDependentDevices;
 	ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
 	/// Change internal state of FSM
 	void switchState(State state);
@@ -89,7 +93,7 @@ protected:
 	//Called when a valid http response comes from REST server
 	void handleHttpResponse(char * response);
 	void handleHttpFailed(void);
-	void handleEndSpeaking(void);
+	void handleSoundsQueueIsEmpty(void);
 	char * getRandomGreetingMessage();
 	char * getRandomSupplyingMessage();
 	char * getRandomLostMessage();
@@ -122,7 +126,7 @@ protected:
 	/// Set when Http request failed. Reset when read.
 	bool myHttpRequestFailed;
 	/// Set when speaking is finished
-	bool myEndSpeaking;
+	bool mySoundFinished;
 	// The card reader
 	LecteurCarteTask myCardReader;
 
@@ -134,7 +138,11 @@ protected:
 	ArFunctor1C<ArServerModeSupply, char *> myCardReadCB;
 	ArFunctor1C<ArServerModeSupply, char *> myHttpResponseCB;
 	ArFunctorC<ArServerModeSupply> myHttpFailedCB;
-	ArFunctorC<ArServerModeSupply> myEndSpeakingCB;
+	ArFunctorC<ArServerModeSupply> mySoundFinishedCB;
+	ArFunctorC<ArServerModeSupply> mySoundsQueueEmptyCB;
+
+	bool mySoundsQueueEmpty;
+	void handleSoundFinished();
 
 	DALRest myHttpRequest;
 	//ArSoundsQueue soundQueue;
@@ -144,7 +152,8 @@ protected:
 	int attemptFailed;
 	
 	char errorMessage[64];
-	ASyncSpeak myASyncSpeak;
+	ArSpeechSynth *speechSynthesizer;
+	ArSoundsQueue *mySoundsQueue;
 	
  
 };

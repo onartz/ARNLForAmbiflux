@@ -626,7 +626,7 @@ int main(int argc, char **argv)
       );
   }
   
- // ArServerModeSupply modeSupply(&server, &robot);
+   ArServerModeSupply modeSupply(&server, &robot);
   //modeSupply.addAsDefaultMode();
   //modeSupply
 
