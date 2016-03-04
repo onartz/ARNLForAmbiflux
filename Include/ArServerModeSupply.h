@@ -32,20 +32,18 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "LecteurCarteTask.h"
 #include "DALRest.h"
 #include "JSONParser.h"
-//#include "Globals.h"
-//#include "ASyncSpeak.h"
 #include "ArSpeech.h"
 #include "ArCepstral.h"
 #include "ArSoundsQueue.h"
+#include "Globals.h"
 
 /*
-Mode in which the robot has to be supplied by an human operator.
+ArServerMode in which the robot has to be supplied by an human operator.
 */
 
 class ArServerModeSupply : public ArServerMode
 {
 public:
-	//ArCepstral myCepstral;
 	enum State {
 		FSM_START,
 		FSM_WAITING_FOR_HUMAN_TO_START,
@@ -63,62 +61,49 @@ public:
   AREXPORT virtual void deactivate(void);
   AREXPORT void supply(const char*);
   AREXPORT void netSupply(ArServerClient *client, ArNetPacket *packet);
-  AREXPORT void handleSupplyDone(char *);
-  AREXPORT void handleSupplyFailed(char *);
+  //AREXPORT void handleSupplyDone(char *);
+  //AREXPORT void handleSupplyFailed(char *);
   AREXPORT virtual void userTask(void);
-  AREXPORT virtual void checkDefault(void) { activate(); }
+  //AREXPORT virtual void checkDefault(void) { activate(); }
   
   AREXPORT virtual ArActionGroup *getActionGroup(void) { return &myStopGroup; }
-  /// Adds to the config
-  //AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
-  /// Sets whether we're using the range devices that depend on location
- // AREXPORT void setUseLocationDependentDevices(
-	 //bool useLocationDependentDevices, bool internal = false);
-  /// Gets whether we're using the range devices that depend on location
-  //AREXPORT bool getUseLocationDependentDevices(void);
+  
    
 
 protected:
-	/*ArActionDeceleratingLimiter *myLimiterForward;
-	ArActionDeceleratingLimiter *myLimiterBackward;
-	ArActionDeceleratingLimiter *myLimiterLateralLeft;
-	ArActionDeceleratingLimiter *myLimiterLateralRight;*/
+	
 	ArActionGroupStop myStopGroup;
-	//bool myUseLocationDependentDevices;
 	ArFunctor2C<ArServerModeSupply, ArServerClient *, ArNetPacket *> myNetSupplyCB;
 	/// Change internal state of FSM
 	void switchState(State state);
 	/// Called a new card has been read by cardREader
 	void handleCardRead(char * cardID);
-	//Called when a valid http response comes from REST server
+	/// Called when a valid http response comes from REST server
 	void handleHttpResponse(char * response);
+	/// Called when failed to contact REST Server
 	void handleHttpFailed(void);
 	void handleSoundsQueueIsEmpty(void);
-	char * getRandomGreetingMessage();
-	char * getRandomSupplyingMessage();
-	char * getRandomLostMessage();
-
-	//char *getRandomMessage(char**);
+	void handleSoundsQueueIsNotEmpty(void);
+	void handleSoundFinished();
 	
-	/// 
 	void supplyTask();
  
 	void stateChanged(void);
+
 	/// Checked if the current operation is ended (done or failed)
 	bool myDone;
 	
 	/// The content to be spupply to the robot
-	const char * myContent;
+	char myContent[256];
 
 	char myGreetingMessage[256];
 	char mySupplyingMessage[256];
 	char myLostMessage[256];
 
-
 	//A new card has been read
 	bool myNewCardRead;
 	//Card ID
-	char * myCardRead;
+	char myCardRead[12];
 	/// Set when a new Http response comes from REST server. Reset when read.
 	bool myHttpNewResponse;
 	/// Content of the response
@@ -127,31 +112,36 @@ protected:
 	bool myHttpRequestFailed;
 	/// Set when speaking is finished
 	bool mySoundFinished;
-	// The card reader
+	/// The card reader
 	LecteurCarteTask myCardReader;
 
+	/// FSM Variables for States
 	State myState;
 	State myLastState;
 	bool myNewState;
 	ArTime myStartedState;
 
+	// Variables to trigger the FSM
+	bool mySoundsQueueEmpty;
+
+	// Some Functors for events from card reader, soundQueue and REST server
 	ArFunctor1C<ArServerModeSupply, char *> myCardReadCB;
 	ArFunctor1C<ArServerModeSupply, char *> myHttpResponseCB;
 	ArFunctorC<ArServerModeSupply> myHttpFailedCB;
 	ArFunctorC<ArServerModeSupply> mySoundFinishedCB;
 	ArFunctorC<ArServerModeSupply> mySoundsQueueEmptyCB;
+	ArFunctorC<ArServerModeSupply> mySoundsQueueNonEmptyCB;
 
-	bool mySoundsQueueEmpty;
-	void handleSoundFinished();
-
+	/// An object to send requests to REST Server	
 	DALRest myHttpRequest;
-	//ArSoundsQueue soundQueue;
+
 
 	std::string myOperatorsName;
 	//Number of Attempt  to initiate communication with human
 	int attemptFailed;
 	
 	char errorMessage[64];
+
 	ArSpeechSynth *speechSynthesizer;
 	ArSoundsQueue *mySoundsQueue;
 	

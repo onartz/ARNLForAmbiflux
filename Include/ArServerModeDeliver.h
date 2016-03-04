@@ -31,11 +31,10 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #include "LecteurCarteTask.h"
 #include "DALRest.h"
 #include "JSONParser.h"
-//#include "Globals.h"
-//#include "ASyncSpeak.h"
 #include "ArSpeech.h"
 #include "ArCepstral.h"
 #include "ArSoundsQueue.h"
+#include "Globals.h"
 
 /*
 Mode in which the robot has to deliver things
@@ -61,10 +60,10 @@ public:
   AREXPORT virtual void deactivate(void);
   AREXPORT void deliver(const char*);
   AREXPORT void netDeliver(ArServerClient *client, ArNetPacket *packet);
-  AREXPORT void handleDeliverDone(char *);
-  AREXPORT void handleDeliverFailed(char *);
+  //AREXPORT void handleDeliverDone(char *);
+  //AREXPORT void handleDeliverFailed(char *);
   AREXPORT virtual void userTask(void);
-  AREXPORT virtual void checkDefault(void) { activate(); }
+  //AREXPORT virtual void checkDefault(void) { activate(); }
   AREXPORT virtual ArActionGroup *getActionGroup(void) { return &myStopGroup; }
   /// Adds to the config
   //AREXPORT void addToConfig(ArConfig *config, const char *section = "Teleop settings");
@@ -93,19 +92,20 @@ protected:
 	void handleHttpResponse(char * response);
 	void handleHttpFailed(void);
 	void handleSoundsQueueIsEmpty(void);
+	void handleSoundsQueueIsNotEmpty(void);
 	//void handleEndSpeaking(void);
-	const char * getRandomGreetingMessage();
+	/*const char * getRandomGreetingMessage();
 	const char * getRandomDeliveryMessage();
 	const char * getRandomLostMessage();
-  
+  */
 	void stateChanged(void);
 	void deliverTask();
 	/// Checked if the current operation is ended (done or failed)
 	bool myDone;
   //Functors passed to a class
-  ArFunctor1C<ArServerModeDeliver, char*> myDeliverDoneCB;
-  ArFunctor1C<ArServerModeDeliver, char*> myDeliverFailedCB;
-  char myGreetingMessage[256];
+	//ArFunctor1C<ArServerModeDeliver, char*> myDeliverDoneCB;
+	//ArFunctor1C<ArServerModeDeliver, char*> myDeliverFailedCB;
+	char myGreetingMessage[256];
 	char myDeliveryMessage[256];
 	char myLostMessage[256];
 
@@ -113,7 +113,7 @@ protected:
 	//A new card has been read
 	bool myNewCardRead;
 	//Card ID
-	char * myCardRead;
+	char myCardRead[12];
 	/// Set when a new Http response comes from REST server. Reset when read.
 	bool myHttpNewResponse;
 	/// Content of the response
@@ -131,11 +131,13 @@ protected:
 	bool myNewState;
 	ArTime myStartedState;
 
+	// Some Functors for events from card reader, soundQueue and REST server
 	ArFunctor1C<ArServerModeDeliver, char *> myCardReadCB;
 	ArFunctor1C<ArServerModeDeliver, char *> myHttpResponseCB;
 	ArFunctorC<ArServerModeDeliver> myHttpFailedCB;
 	ArFunctorC<ArServerModeDeliver> mySoundFinishedCB;
 	ArFunctorC<ArServerModeDeliver> mySoundsQueueEmptyCB;
+	ArFunctorC<ArServerModeDeliver> mySoundsQueueNonEmptyCB;
 
 	bool mySoundsQueueEmpty;
 	void handleSoundFinished();
@@ -147,7 +149,7 @@ protected:
 	char errorMessage[64];
 	//ASyncSpeak myASyncSpeak;
   
-	const char * myContent;
+	char myContent[256];
 	ArSpeechSynth *speechSynthesizer;
 	ArSoundsQueue *mySoundsQueue;
 

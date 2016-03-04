@@ -14,7 +14,7 @@ using namespace std;
 #define WCFHOSTIPADDRESS	"100.74.39.204"
 #define HOSTWEBADDRESS	"100.74.39.204"
 #define HOSTURL		"http://100.74.39.204"
-#define SERVICE	"/AmbifluxWcfService/Ambiflux.svc/jso/"
+#define SERVICE	"/AmbifluxWcfService/Ambiflux.svc/json/"
 #define REQUEST	"srma"
 #define REQ_LOGSRMA	"logSRMA"
 #define REQ_WORKORDERS	"workorders"

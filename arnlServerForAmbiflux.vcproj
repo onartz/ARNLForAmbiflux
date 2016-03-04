@@ -19,7 +19,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="C:\Program Files\MobileRobots\Aria\bin"
+			OutputDirectory="C:\Program Files\MobileRobots\Arnl\bin"
 			IntermediateDirectory="obj/$(ConfigurationName)-VC9"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
@@ -306,6 +306,10 @@
 			</File>
 			<File
 				RelativePath=".\DALRest.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Globals.cpp"
 				>
 			</File>
 			<File
