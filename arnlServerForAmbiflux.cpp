@@ -8,19 +8,20 @@
 #include <time.h>
 #include <stdio.h>
 #include <assert.h>
-#include "Aria.h"
-#include "ArNetworking.h"
+//#include "Aria.h"
 #include "Arnl.h"
-#include "ArServerModeSupply.h"
-#include "ArServerModeDeliver.h"
-#include "ArLocalizationTask.h"
 #include "ArDocking.h"
 //#include "ArLog.h"
 #include "ArServerMyMode.h"
+#include "ArServerModeBidon.h"
+//#include "ArNetworking.h"
+
+#include "ArServerModeSupply.h"
+#include "ArServerModeDeliver.h"
+//#include "ArLocalizationTask.h"
+
 #include "Globals.h"
 //#include "sqlite3.h"
-
-
 
 
 void logOptions(const char *progname)
@@ -491,7 +492,7 @@ int main(int argc, char **argv)
   // be available in MobileEyes' custom commands (enable in the toolbar or
   // access through Robot Tools)
   ArServerHandlerCommands commands(&server);
-
+  
  
   // Add our custom command. ArServerHandlerCommands also has other methods
   // for adding commands taht take different kinds of arguments, or no
@@ -553,7 +554,9 @@ int main(int argc, char **argv)
    // Mode To go to a goal or other specific point:
   ArServerMyMode myMode(&server, &robot,&locTask, &pathTask, &map, 300, 300);
  
-
+	ArServerModeBidon myModeBidon(&server, &robot);
+	myModeBidon.addControlCommands(&commands);
+ 
 
 
   // Mode To stop and remain stopped:
@@ -644,6 +647,8 @@ int main(int argc, char **argv)
     modeDock->addToConfig(Aria::getConfig());
     modeDock->addControlCommands(&commands);
   }
+
+
 
 
   // Make Stop mode the default (If current mode deactivates without entering

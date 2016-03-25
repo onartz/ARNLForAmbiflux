@@ -48,6 +48,7 @@ AREXPORT ArServerModeSupply::ArServerModeSupply(ArServerBase *server,
 
   if (myServer != NULL)
   {
+	 
     addModeData("supply", "supply the robot", &myNetSupplyCB,
 		"string: content", "none", "Supply", "RETURN_NONE");
 	

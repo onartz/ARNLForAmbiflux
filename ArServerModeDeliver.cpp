@@ -48,7 +48,6 @@ AREXPORT ArServerModeDeliver::ArServerModeDeliver(ArServerBase *server,
   
   if (myServer != NULL)
   {
-	 
     addModeData("deliver", "deliver the robot", &myNetDeliverCB,
 		"string: content", "none", "Deliver", "RETURN_NONE");
 	myNewCardRead = false;

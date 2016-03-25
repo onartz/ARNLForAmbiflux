@@ -23,8 +23,8 @@ Adept MobileRobots for information about a commercial version of ARIA at
 robots@mobilerobots.com or 
 Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 */
-#ifndef ARSERVEURMODESUPPLY_H
-#define ARSERVEURMODESUPPLY_H
+#ifndef ARSERVERMODESUPPLY_H
+#define ARSERVERMODESUPPLY_H
 
 
 #include "Aria.h"
@@ -92,6 +92,8 @@ protected:
 
 	/// Checked if the current operation is ended (done or failed)
 	bool myDone;
+	// used by the base class for the interrupted handling
+	ArServerMode *myModeInterrupted;
 	
 	/// The content to be spupply to the robot
 	char myContent[256];
