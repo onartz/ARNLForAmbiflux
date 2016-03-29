@@ -68,6 +68,7 @@ myNeedToPathPlan(false)
 	myHitDock = false;
 	myDriveFromValid = false;
 	myPosition = "unknown";
+	lockMode(true);
 
 	//TODO : A supprimer et checker position
 	switchState(UNDOCKED);
@@ -135,7 +136,7 @@ AREXPORT void ArServerMyMode::activate(){
 // exemple : mode stop
   myModeInterrupted = activeMode;
   clearInterrupted();
-
+  
   //if (myForcedDock && activeMode != NULL)
   //{
   //  //printf("Interrupted %s\n", getActiveMode()->getName());
@@ -155,10 +156,11 @@ AREXPORT void ArServerMyMode::activate(){
     ArLog::log(ArLog::Normal, "DOCK: Couldn't activate, clearing interrupted");
     clearInterrupted();
     return;
+  }
 
 	lockMode(true);
-	dock();
-  }
+	//dock();
+  
 	/*if(!baseActivate())
 		return;*/
 }
@@ -173,19 +175,19 @@ AREXPORT void ArServerMyMode::deactivate(){
   myNeedToPathPlan = false;
    if (myState == UNDOCKED)
 	{
-		ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate(), STATE = UNDOCKED");
+		//ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate(), STATE = UNDOCKED");
 		//myForcedDock = false;
 		//myShuttingDownSeconds = 0;
 		//broadcastDockInfoChanged();
 		baseDeactivate();
-		ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate(), END");
+		//ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate(), END");
 	}
    else{
-	   ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate(), STATE != UNDOCKED");
+	   //ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate(), STATE != UNDOCKED");
 	   
 		undockFrom();
    }
-   ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate() : EXIT function");
+   //ArLog::log(ArLog::Normal,"ArServerMyMode::deactivate() : EXIT function");
    
 }
 
@@ -197,7 +199,7 @@ AREXPORT void ArServerMyMode::deactivate(){
 * Else activate GOINGTOGOAL
 */
 AREXPORT void ArServerMyMode::dock(){
-	ArLog::log(ArLog::Normal,"calling dock()");
+	//ArLog::log(ArLog::Normal,"calling dock()");
 	activate();
 	//
 	if (!myIsActive)
@@ -218,19 +220,19 @@ AREXPORT void ArServerMyMode::dock(){
 
 
 AREXPORT void ArServerMyMode::undockFrom(){
-	ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom()");
+	//ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom()");
 	/*if(!myIsActive)
 		activate();*/
   //myRobot->enableMotors();
 	 /*if (myState == DOCKED && !myRetryDock)
 		return;*/
 	if(myState == UNDOCKED){
-		ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom() requested at STATE = UNDOCKED");
+		//ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom() requested at STATE = UNDOCKED");
 		resumeInterrupted(true);
 	}
 	else if (myState == DOCKED)
 	  {
-		  ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom() requested at STATE = DOCKED");
+		  //ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom() requested at STATE = DOCKED");
 		if (myDesiredBackOutDist > .1)
 			myDistanceToBack = myDesiredBackOutDist;
 		else if (myDriveFromValid)
@@ -245,7 +247,7 @@ AREXPORT void ArServerMyMode::undockFrom(){
 	  }
   else if (myState == DOCKING)
   {
-	  ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom(), STATE = DOCKING");
+	 // ArLog::log(ArLog::Normal, "ArServerMyMode::undockFrom(), STATE = DOCKING");
 	myRobot->stop();
     ArLog::log(ArLog::Normal, "Undocking");
     if (myDesiredBackOutDist > .1)
@@ -299,8 +301,7 @@ AREXPORT void ArServerMyMode::userTask(){
 					myStatus = "Failed to go to triangle";
 					resumeInterrupted(false);
 					return;
-				}
-				
+				}			
 				myStatus = "Going to goal at ";
 				myStatus += myGoalName;
 				ArLog::log(ArLog::Normal, "Docking at %s", myGoalName.c_str());
@@ -314,7 +315,7 @@ AREXPORT void ArServerMyMode::userTask(){
 				frontBump |= ArUtil::BIT0;
 			//Robot at goal and DriveTo not started
 			if(myGoalDone && !myDriveTo.isActive()){
-				ArLog::log(ArLog::Normal, "Driving into dock");
+				//ArLog::log(ArLog::Normal, "Driving into dock");
 				myNewState = false;
 			//beforeDriveInCallback();
 				myDriveFromValid = true;
@@ -398,8 +399,8 @@ AREXPORT void ArServerMyMode::userTask(){
 		case DOCKED:
 			break;
 		case UNDOCKING:
-			ArLog::log(ArLog::Normal, "UserTask STATE = UNDOCKING");
-			ArLog::log(ArLog::Normal, "myStartedBacking = %d", myStartedBacking);
+			//ArLog::log(ArLog::Normal, "UserTask STATE = UNDOCKING");
+			//ArLog::log(ArLog::Normal, "myStartedBacking = %d", myStartedBacking);
 			 myHitDock = false;
 			if (printing)
 				printf("Undocking %ld\n", myStartedState.secSince());
@@ -649,6 +650,18 @@ AREXPORT void ArServerMyMode::goalFailed(ArPose goal){
 	//switchState(UNDOCKED);
 }
 
+AREXPORT void ArServerMyMode::requestUnlock()
+{
+	//if (myState == UNDOCKED)
+		deactivate();
+  
+}
 
+AREXPORT void ArServerMyMode::forceUnlock(void)
+{
+  ArUtil::sleep(10);
+  myState = UNDOCKED;
+  ArServerMode::forceUnlock();
+}
 
 

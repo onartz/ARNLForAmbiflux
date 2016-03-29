@@ -494,10 +494,11 @@ int main(int argc, char **argv)
   ArServerHandlerCommands commands(&server);
   
  
-  // Add our custom command. ArServerHandlerCommands also has other methods
+  
+ // Add our custom command. ArServerHandlerCommands also has other methods
   // for adding commands taht take different kinds of arguments, or no
   // arguments.
-
+ 
 
 
   // These provide various kinds of information to the client:
@@ -554,8 +555,9 @@ int main(int argc, char **argv)
    // Mode To go to a goal or other specific point:
   ArServerMyMode myMode(&server, &robot,&locTask, &pathTask, &map, 300, 300);
  
-	ArServerModeBidon myModeBidon(&server, &robot);
-	myModeBidon.addControlCommands(&commands);
+ 
+	//ArServerModeBidon myModeBidon(&server, &robot);
+	//myModeBidon.addControlCommands(&commands);
  
 
 

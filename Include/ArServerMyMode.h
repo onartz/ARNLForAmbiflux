@@ -40,6 +40,8 @@ AREXPORT void ArServerMyMode::afterDriveOutCallback();
 	AREXPORT void dock(void);
 	AREXPORT void undockFrom(void);
 	AREXPORT void gotoTriangle(const char*);
+	AREXPORT void requestUnlock(void);
+	AREXPORT void forceUnlock(void);
 	 /// This is for clearing the interrupted mode
 	AREXPORT void clearInterrupted(void);
 	/// This is for resuming the interrupted mode if we should
