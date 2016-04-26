@@ -288,7 +288,7 @@ AREXPORT void ArServerMyMode::userTask(){
 	int frontBump;
 	int frontBumpMask = (ArUtil::BIT1 | ArUtil::BIT2 | ArUtil::BIT3 | 
 		       ArUtil::BIT4 | ArUtil::BIT5 | ArUtil::BIT6);
-	ArLog::log(ArLog::Normal,toString(myState));
+	//ArLog::log(ArLog::Normal,toString(myState));
 	switch(myState){
 		case UNDOCKED:
 			if (myNeedToPathPlan && !myServer->idleProcessingPending())

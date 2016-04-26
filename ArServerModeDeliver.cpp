@@ -215,7 +215,7 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 					myHttpRequestFailed = false;
 					myNewState = false;
 					strcpy(errorMessage, "No error\0");
-					mySoundsQueue->play("c:\\temp\\ShortCircuit.wav");
+					mySoundsQueue->play("c:\\temp\\sound-r2a.wav");
 					break;
 				}
 				//We have to wait until the end of speach
@@ -259,15 +259,15 @@ AREXPORT void ArServerModeDeliver::userTask(void)
 					if(myNewState){
 						ArLog::log(ArLog::Normal,"State FSM_INFORM_FOR_DELIVERY");
 						myNewState = false;
-						sprintf(myGreetingMessage,getRandomGreetingMessage(),"");
+						sprintf(myGreetingMessage,getRandomGreetingMessage(),"guy");
 						sprintf(myDeliveryMessage,getRandomDeliveryingMessage(),myContent );
 						ArLog::log(ArLog::Normal,"Greeting message : %s", myGreetingMessage);
 						ArLog::log(ArLog::Normal,"Deliverying message : %s", myDeliveryMessage);
 
 						mySoundsQueue->speak(myGreetingMessage);
-						ArUtil::sleep(100);
+						ArUtil::sleep(1000);
 						mySoundsQueue->speak(myDeliveryMessage);
-						ArUtil::sleep(100);
+						ArUtil::sleep(1000);
 						break;
 					
 					}

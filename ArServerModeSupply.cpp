@@ -211,7 +211,7 @@ AREXPORT void ArServerModeSupply::userTask(void)
 					myOperatorsName = "";
 					//attemptFailed = 0;
 					strcpy(errorMessage, "No error\0");
-					mySoundsQueue->play("c:\\temp\\ShortCircuit.wav");
+					mySoundsQueue->play("c:\\temp\\sound-rb2.wav");
 					break;
 				}
 				//We have to wait until the end of speach
@@ -312,13 +312,12 @@ AREXPORT void ArServerModeSupply::userTask(void)
 						ArLog::log(ArLog::Normal,"State FSM_INFORM_FOR_SUPPLY");
 						myNewState = false;
 						sprintf(mySupplyingMessage,getRandomSupplyingMessage(),myContent );
-						ArLog::log(ArLog::Normal,"Greeting message : %s", myGreetingMessage);
-						ArLog::log(ArLog::Normal,"Supplying message : %s", mySupplyingMessage);
-
+						//ArLog::log(ArLog::Normal,"Greeting message : %s", myGreetingMessage);
+						//ArLog::log(ArLog::Normal,"Supplying message : %s", mySupplyingMessage);
 						mySoundsQueue->speak(myGreetingMessage);
-						ArUtil::sleep(100);
+						ArUtil::sleep(1000);
 						mySoundsQueue->speak(mySupplyingMessage);
-						ArUtil::sleep(100);
+						ArUtil::sleep(1000);
 						//Cepstral : "In formation + Use your badge to teminate"
 	
 						break;
