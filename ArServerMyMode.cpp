@@ -54,9 +54,8 @@ myNeedToPathPlan(false)
 	myGroup.addAction(&myDriveTo, 55);
 	myGroup.addAction(new ArActionStop, 50);
 	clearInterrupted();
-	
-
-	
+	myDesiredBackOutDist = backOutDist;
+		
 	//myDriveTo.setMaxAngleMisalignment(10);
 	myDriveTo.setMaxLateralDist(500);
 	myDriveTo.setMaxDistBetweenLinePoints(50);

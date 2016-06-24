@@ -553,7 +553,7 @@ int main(int argc, char **argv)
 			    locTask.getRobotHomeCallback());
 
    // Mode To go to a goal or other specific point:
-  ArServerMyMode myMode(&server, &robot,&locTask, &pathTask, &map, 300, 300);
+  ArServerMyMode myMode(&server, &robot,&locTask, &pathTask, &map, 300, 100);
  
  
 	//ArServerModeBidon myModeBidon(&server, &robot);

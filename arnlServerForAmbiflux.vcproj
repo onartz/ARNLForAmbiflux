@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib Sqlite3.lib SpringProx.lib ArSpeechSynth_Cepstral_Static_Debug.lib swift.lib"
+				AdditionalDependencies="ArnlDebugVC9.lib AriaDebugVC9.lib BaseArnlDebugVC9.lib ArNetworkingDebugVC9.lib SpringProx.lib ArSpeechSynth_Cepstral_Static_Debug.lib swift.lib"
 				OutputFile="$(OutDir)\$(ProjectName)DebugVC9.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -285,10 +285,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ArDocking.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\arnlServerForAmbiflux.cpp"
 				>
 			</File>
@@ -330,10 +326,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\Include\ArDocking.h"
-				>
-			</File>
 			<File
 				RelativePath=".\Include\ArServerModeBidon.h"
 				>
