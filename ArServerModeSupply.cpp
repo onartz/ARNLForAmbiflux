@@ -23,8 +23,8 @@ Adept MobileRobots for information about a commercial version of ARIA at
 robots@mobilerobots.com or 
 Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 */
-#include "Aria.h"
-#include "ArExport.h"
+//#include "Aria.h"
+//#include "ArExport.h"
 #include "ArServerModeSupply.h"
 #include <boost/algorithm/string/replace.hpp>
 

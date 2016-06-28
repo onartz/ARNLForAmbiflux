@@ -27,14 +27,25 @@ Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; 800-639-9481
 #define ARSERVERMODEDELIVER_H
 
 #include "Aria.h"
-#include "ArServerMode.h"
+#include "ArNetworking.h"
+//#include "ArServerMode.h"
 #include "LecteurCarteTask.h"
 #include "DALRest.h"
 #include "JSONParser.h"
 #include "ArSpeech.h"
 #include "ArCepstral.h"
-#include "ArSoundsQueue.h"
+//#include "ArSoundsQueue.h"
 #include "Globals.h"
+
+/*#include "Aria.h"
+#include "ArNetworking.h"
+#include "LecteurCarteTask.h"
+#include "DALRest.h"
+#include "JSONParser.h"
+//#include "ArSpeech.h"
+#include "ArCepstral.h"
+//#include "ArSoundsQueue.h"
+#include "Globals.h"*/
 
 /*
 Mode in which the robot has to deliver things

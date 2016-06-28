@@ -1,5 +1,6 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
+#include "ariaTypedefs.h"
 //#include "ArCepstral.h"
 //#include "ArSoundsQueue.h"
 //#include "ArSoundPlayer.h"

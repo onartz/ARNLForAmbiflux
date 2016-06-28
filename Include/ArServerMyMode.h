@@ -1,12 +1,13 @@
 #ifndef ARSERVERMYMODE_H
 #define ARSERVERMYMODE_H
 
-#include "ariaTypedefs.h"
+//#include "ariaTypedefs.h"
 #include "Aria.h"
-#include "ArServerMode.h"
+#include "ArNetworking.h"
 
 #include "ArPathPlanningTask.h"
 #include "ArLocalizationTask.h"
+
 
 class ArServerMyMode : public ArServerMode{
 public:

@@ -3,8 +3,8 @@
 
 //Obligatoire pour ne pas inclure winsock.h
 //#include <WinSock2.h> 
-#include "ArAsyncTask.h"
-#include "AriaUtil.h"
+#include "Aria.h"
+//#include "AriaUtil.h"
 #include "springprox.h"
 
 #define DEFAULT_TIMEOUT 4000
