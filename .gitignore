@@ -1,24 +1,29 @@
-arnlServerForAmbiflux.ncb
-arnlServerForAmbiflux.suo
-arnlServerForAmbiflux.vcproj
-arnlServerForAmbiflux.vcproj.AIP-TELMA.telma.user
-arnlServer-vc2008.vcproj.AIP-TELMA.telma.user
-bin/ArnlServerForAmbifluxDebugVC9.exp
-bin/ArnlServerForAmbifluxDebugVC9.lib
-bin/ArnlServerForAmbifluxDebugVC9.pdb
-Lib/springprox.lib
-Lib/swift.lib
-obj/Debug-VC9/arnlServerForAmbiflux.obj
-obj/Debug-VC9/ArnlServerForAmbifluxDebugVC9.exe.embed.manifest
-obj/Debug-VC9/ArnlServerForAmbifluxDebugVC9.exe.embed.manifest.res
-obj/Debug-VC9/ArnlServerForAmbifluxDebugVC9.exe.intermediate.manifest
-obj/Debug-VC9/arnlserverforambifluxdebugvc9.idb
-obj/Debug-VC9/arnlserverforambifluxdebugvc9.pdb
-obj/Debug-VC9/ArServerModeSupply.obj
-obj/Debug-VC9/BuildLog.htm
-obj/Debug-VC9/LecteurCarteTask.obj
-obj/Debug-VC9/mt.dep
-obj/Debug-VC9/SupplyTask.obj
-robotPose
-arnlServerForAmbiflux.vcproj
-arnlServerForAmbiflux.vcproj
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
